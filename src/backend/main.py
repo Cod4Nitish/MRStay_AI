@@ -1,8 +1,9 @@
-# FastAPI entry point
 from fastapi import FastAPI
 
-app = FastAPI(title="MRStay AI")
+from src.backend.api.health import router as health_router
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+app = FastAPI(
+    title="MRStay AI"
+)
+
+app.include_router(health_router)
