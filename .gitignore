@@ -1,0 +1,24 @@
+# Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+*.env
+!.env.example
+
+# Node
+node_modules/
+
+# Vector store / data
+src/rag/vector_store/*
+!src/rag/vector_store/.gitkeep
+src/rag/embeddings/*
+!src/rag/embeddings/.gitkeep
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+
+# OS
+.DS_Store
