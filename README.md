@@ -61,14 +61,9 @@ To build the next generation of AI-powered hospitality software that enables bus
 
 ---
 
-# 🏗️ System Architecture
+## 🏗️ System Architecture
 
-> Detailed architecture documentation is available in `docs/architecture/`
-
-<p align="center">
-<img src="docs/....png" width="95%">
-</p>
-
+Detailed architecture documentation will be added during development.
 ---
 
 # 🛠️ Technology Stack
@@ -86,10 +81,6 @@ To build the next generation of AI-powered hospitality software that enables bus
 ---
 
 # 📂 Repository Structure
-
-<p align="center">
-<img src="docs/......png" width="90%">
-</p>
 
 ```text
 MRStay-AI/
@@ -173,10 +164,6 @@ http://127.0.0.1:8000
 
 # 🔄 Development Workflow
 
-<p align="center">
-<img src="docs/....png" width="90%">
-</p>
-
 Engineering Workflow:
 
 Planning
@@ -213,11 +200,36 @@ Deployment
 
 # 🤖 AI Workflow
 
-<p align="center">
-<img src="docs/....png" width="95%">
-</p>
-
----
+```text
+Customer
+    │
+    ▼
+Reception Agent
+    │
+    ▼
+Intent Detection
+    │
+    ▼
+Agent Orchestrator
+    │
+    ▼
+Property AI
+Marketing AI
+Lead AI
+Support AI
+    │
+    ▼
+Tool Manager
+    │
+    ▼
+Gemini
+    │
+    ▼
+ChromaDB
+    │
+    ▼
+Response
+```
 
 # 📊 Project Status
 
@@ -235,10 +247,24 @@ Deployment
 
 # 🗺️ Roadmap
 
-<p align="center">
-<img src="docs/....." width="95%">
-</p>
+### Phase 1
+- Project Foundation
+- GitHub Setup
+- RAG
+- ChromaDB
+- FastAPI
 
+### Phase 2
+- AI Agents
+- CRM Integration
+- WhatsApp Integration
+- Dashboard
+
+### Phase 3
+- Testing
+- Deployment
+- Monitoring
+- CI/CD
 ---
 
 # 📚 Documentation
