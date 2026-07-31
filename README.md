@@ -4,7 +4,7 @@
 # 🏨 MRStay AI
 
 <p align="center">
-  <img src="assets/banner.png" alt="MRStay AI Banner" width="100%">
+  <img src="assets/..." alt="MRStay AI Banner" width="100%">
 </p>
 
 <p align="center">
@@ -66,7 +66,7 @@ To build the next generation of AI-powered hospitality software that enables bus
 > Detailed architecture documentation is available in `docs/architecture/`
 
 <p align="center">
-<img src="docs/architecture/system-architecture.png" width="95%">
+<img src="docs/....png" width="95%">
 </p>
 
 ---
@@ -88,7 +88,7 @@ To build the next generation of AI-powered hospitality software that enables bus
 # 📂 Repository Structure
 
 <p align="center">
-<img src="docs/architecture/repository-structure.png" width="90%">
+<img src="docs/......png" width="90%">
 </p>
 
 ```text
@@ -174,7 +174,7 @@ http://127.0.0.1:8000
 # 🔄 Development Workflow
 
 <p align="center">
-<img src="docs/architecture/development-workflow.png" width="90%">
+<img src="docs/....png" width="90%">
 </p>
 
 Engineering Workflow:
@@ -214,7 +214,7 @@ Deployment
 # 🤖 AI Workflow
 
 <p align="center">
-<img src="docs/architecture/ai-agent-flow.png" width="95%">
+<img src="docs/....png" width="95%">
 </p>
 
 ---
@@ -236,7 +236,7 @@ Deployment
 # 🗺️ Roadmap
 
 <p align="center">
-<img src="docs/architecture/roadmap.png" width="95%">
+<img src="docs/....." width="95%">
 </p>
 
 ---
