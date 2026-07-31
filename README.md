@@ -1,7 +1,12 @@
 # 🏨 MRStay AI
 
 <p align="center">
-AI-Powered Hospitality Platform for Intelligent Property Management, Guest Experience, and Business Automation.
+  <img src="assets/banner.png" alt="MRStay AI Banner" width="100%">
+</p>
+
+<p align="center">
+  <strong>AI-Powered Hospitality Platform</strong><br>
+  Intelligent Property Management • AI Sales Assistant • Business Automation • Guest Experience
 </p>
 
 <p align="center">
@@ -10,50 +15,40 @@ AI-Powered Hospitality Platform for Intelligent Property Management, Guest Exper
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-009688?style=for-the-badge&logo=fastapi)
 
-![Frontend](https://img.shields.io/badge/Frontend-HTML%20|%20CSS%20|%20JavaScript-E34F26?style=for-the-badge)
+![Frontend](https://img.shields.io/badge/Frontend-HTML%20CSS%20JavaScript-orange?style=for-the-badge)
 
 ![AI](https://img.shields.io/badge/AI-Gemini%20%2B%20RAG-blueviolet?style=for-the-badge)
 
-![Database](https://img.shields.io/badge/PostgreSQL-ChromaDB-336791?style=for-the-badge)
+![Database](https://img.shields.io/badge/PostgreSQL%20%7C%20ChromaDB-336791?style=for-the-badge)
 
-![License](https://img.shields.io/badge/Repository-Private-red?style=for-the-badge)
+![Repository](https://img.shields.io/badge/Repository-Private-red?style=for-the-badge)
 
 </p>
 
 ---
 
-# Overview
+# 📖 Overview
 
-MRStay AI is an intelligent hospitality platform designed to modernize property management, guest engagement, and business operations using Artificial Intelligence.
+MRStay AI is an enterprise-grade AI platform designed to modernize hospitality operations through intelligent automation, conversational AI, and scalable software architecture.
 
-The platform combines Retrieval-Augmented Generation (RAG), Large Language Models (LLMs), intelligent workflow automation, and modular software architecture to deliver scalable hospitality solutions.
-
----
-
-# Vision
-
-To redefine hospitality through AI-driven automation, seamless guest experiences, and intelligent business operations.
+The platform integrates AI agents, Retrieval-Augmented Generation (RAG), Large Language Models (LLMs), and business automation to simplify property management, improve guest experiences, and support sales operations.
 
 ---
 
-# Mission
+# 🎯 Vision
 
-- Build scalable AI solutions
-- Automate repetitive workflows
-- Enhance customer experiences
-- Deliver secure enterprise software
-- Simplify hospitality operations
+To build the next generation of AI-powered hospitality software that enables businesses to operate smarter, faster, and more efficiently.
 
 ---
 
-# Core Capabilities
+# 🚀 Core Features
 
 - 🤖 AI Sales Assistant
 - 🏨 Property Recommendation Engine
 - 💬 AI Customer Support
-- 📊 Business Analytics
+- 📊 Analytics Dashboard
 - 📚 Retrieval-Augmented Generation (RAG)
 - 🧠 Conversational Memory
 - 📅 Workflow Automation
@@ -63,44 +58,20 @@ To redefine hospitality through AI-driven automation, seamless guest experiences
 
 ---
 
-# System Architecture
+# 🏗️ System Architecture
 
-```text
-                    Customer
-                        │
-                        ▼
-              Reception AI Agent
-                        │
-                        ▼
-               Intent Detection
-                        │
-                        ▼
-              Agent Orchestrator
-                        │
- ┌─────────────┬─────────────┬─────────────┐
- │ Property AI │ Marketing AI│ Support AI │
- └─────────────┴─────────────┴─────────────┘
-                        │
-                        ▼
-             Tool Integration Layer
-      WhatsApp • CRM • Email • Calendar
-                        │
-                        ▼
-             RAG + Chroma Vector Database
-                        │
-                        ▼
-                   Gemini LLM
-                        │
-                        ▼
-                Analytics Dashboard
-```
+> Detailed architecture documentation is available in `docs/architecture/`
+
+<p align="center">
+<img src="docs/architecture/system-architecture.png" width="95%">
+</p>
 
 ---
 
-# Technology Stack
+# 🛠️ Technology Stack
 
 | Layer | Technology |
-|--------|------------|
+|---------|------------|
 | Backend | FastAPI |
 | Frontend | HTML • CSS • JavaScript |
 | AI Framework | LangGraph |
@@ -111,7 +82,11 @@ To redefine hospitality through AI-driven automation, seamless guest experiences
 
 ---
 
-# Repository Structure
+# 📂 Repository Structure
+
+<p align="center">
+<img src="docs/architecture/repository-structure.png" width="90%">
+</p>
 
 ```text
 MRStay-AI/
@@ -132,9 +107,75 @@ CHANGELOG.md
 
 ---
 
-# Development Workflow
+# 🚀 Getting Started
+
+## Clone Repository
+
+```bash
+git clone https://github.com/<organization-or-username>/MRStay-AI.git
+cd MRStay-AI
+```
+
+---
+
+## Create Virtual Environment
+
+### Windows
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+## Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Update all required environment variables before starting the application.
+
+---
+
+## Run Backend
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+Application:
 
 ```
+http://127.0.0.1:8000
+```
+
+---
+
+# 🔄 Development Workflow
+
+<p align="center">
+<img src="docs/architecture/development-workflow.png" width="90%">
+</p>
+
+Engineering Workflow:
+
 Planning
 
 ↓
@@ -155,14 +196,6 @@ Integration Testing
 
 ↓
 
-API Testing
-
-↓
-
-Frontend Testing
-
-↓
-
 Git Commit
 
 ↓
@@ -172,132 +205,90 @@ Pull Request
 ↓
 
 Deployment
-```
 
 ---
 
-# 🚀 Getting Started
+# 🤖 AI Workflow
 
-## Clone the Repository
-
-```bash
-git clone https://github.com/<organization-or-username>/MRStay-AI.git
-cd MRStay-AI
-```
-
-## Create a Virtual Environment
-
-### Windows
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-### Linux / macOS
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-## Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-## Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Update the required environment variables and API keys before running the application.
-
-## Start Backend
-
-```bash
-uvicorn backend.main:app --reload
-```
-
-The API will be available at:
-
-```
-http://127.0.0.1:8000
-```
-
-# Engineering Principles
-
-- Clean Architecture
-- Modular Development
-- AI First
-- Security by Design
-- Test Before Merge
-- Documentation Driven
-- Scalable Codebase
+<p align="center">
+<img src="docs/architecture/ai-agent-flow.png" width="95%">
+</p>
 
 ---
 
-# Roadmap
+# 📊 Project Status
 
-### Phase 1
-
-- Foundation
-- RAG
-- ChromaDB
-- FastAPI
-
-### Phase 2
-
-- AI Agents
-- CRM
-- WhatsApp
-- Dashboard
-
-### Phase 3
-
-- Deployment
-- Monitoring
-- Analytics
-- Scaling
+| Module | Status |
+|---------|--------|
+| Backend | 🚧 In Progress |
+| Frontend | 🚧 In Progress |
+| AI Agents | 🚧 In Progress |
+| RAG | 🚧 In Progress |
+| Documentation | 🚧 In Progress |
+| Testing | ⏳ Planned |
+| Deployment | ⏳ Planned |
 
 ---
 
-# Documentation
+# 🗺️ Roadmap
 
-Complete documentation is available inside
+<p align="center">
+<img src="docs/architecture/roadmap.png" width="95%">
+</p>
 
-```
+---
+
+# 📚 Documentation
+
+Complete project documentation is available in:
+
+```text
 docs/
 ```
 
+Includes:
+
+- Architecture
+- Development Guide
+- API Documentation
+- Deployment
+- Testing
+- Research
+- Roadmap
+
 ---
 
-# Contributing
+# 🤝 Contributing
 
-Please follow the project's engineering standards before submitting code.
-
-Read:
+Please read:
 
 ```
 CONTRIBUTING.md
 ```
 
----
+before contributing.
 
-# Security
-
-Sensitive credentials, API keys, databases, and internal documents must never be committed to Git.
+Follow the established Git workflow, coding standards, and review process.
 
 ---
 
-# Repository Status
+# 🔒 Security
 
-🚧 Active Development
+Never commit:
+
+- API Keys
+- Passwords
+- `.env`
+- Database Dumps
+- Secrets
+- Credentials
 
 ---
 
-© MRStay AI
+# 📄 License
 
-Official Engineering Repository
+Private Repository
+
+Internal Engineering Project
+
+© MRStay AI. All Rights Reserved.
