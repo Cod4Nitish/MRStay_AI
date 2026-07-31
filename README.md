@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.png" alt="MRStay AI Banner" width="100%">
+  <img src="assets/banner.png.png" alt="MRStay AI Banner" width="100%">
 </p>
 
 <br>
