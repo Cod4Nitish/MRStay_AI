@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="assets/banner.png" alt="MRStay AI Banner" width="100%">
+</p>
+
+<br>
 # 🏨 MRStay AI
 
 <p align="center">
