@@ -9,5 +9,12 @@ router = APIRouter(
 @router.get("/")
 def health_check():
     return {
-        "status": "ok"
+        "status": "ok",
+        "services": {
+            "fastapi": "healthy",
+            "gemini": "not_configured",
+            "chromadb": "not_connected",
+            "postgres": "not_connected",
+            "redis": "not_connected"
+        }
     }

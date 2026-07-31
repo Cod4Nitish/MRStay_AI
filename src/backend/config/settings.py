@@ -30,5 +30,11 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # ChromaDB
 CHROMA_DB_PATH = os.getenv(
     "CHROMA_DB_PATH",
-    str(BASE_DIR / "data" / "chroma_db")
+    str(BASE_DIR / "src" / "backend" / "data" / "chroma_db")
+)
+
+# Documents
+DOCUMENTS_PATH = os.getenv(
+    "DOCUMENTS_PATH",
+    str(BASE_DIR / "src" / "backend" / "data" / "documents")
 )

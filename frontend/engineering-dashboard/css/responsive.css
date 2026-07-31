@@ -1,0 +1,167 @@
+/* css/responsive.css - Media queries and responsive adjustments */
+
+@media (max-width: 1400px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --sidebar-width: 220px;
+  }
+  
+  .kanban-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .page-content {
+    padding: var(--spacing-lg);
+  }
+  
+  .top-navbar {
+    padding: 0 var(--spacing-lg);
+  }
+  
+  .cards-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: var(--sidebar-collapsed);
+  }
+  
+  .main-content {
+    margin-left: var(--sidebar-collapsed);
+  }
+  
+  .sidebar .sidebar-title,
+  .nav-item span,
+  .nav-item .nav-badge,
+  .sidebar-section-title,
+  .sidebar-footer-info {
+    display: none;
+  }
+  
+  .sidebar-header {
+    justify-content: center;
+    padding: var(--spacing-md);
+  }
+  
+  .nav-item {
+    justify-content: center;
+    padding: 10px;
+  }
+  
+  .sidebar-footer {
+    justify-content: center;
+  }
+  
+  .hamburger-btn {
+    display: flex !important;
+  }
+  
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+  
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  
+  .cards-grid-3,
+  .cards-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Hamburger button in navbar is typically managed via HTML toggle classes */
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px; /* Restore full width for mobile menu */
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Re-show sidebar text in mobile open state */
+  .sidebar.open .sidebar-title,
+  .sidebar.open .nav-item span,
+  .sidebar.open .nav-item .nav-badge,
+  .sidebar.open .sidebar-section-title,
+  .sidebar.open .sidebar-footer-info {
+    display: flex;
+  }
+  
+  .sidebar.open .sidebar-header,
+  .sidebar.open .nav-item,
+  .sidebar.open .sidebar-footer {
+    justify-content: flex-start;
+  }
+  
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+    display: none;
+    backdrop-filter: blur(2px);
+  }
+  
+  .sidebar-overlay.active {
+    display: block;
+  }
+  
+  .page-content {
+    padding: var(--spacing-md);
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+  
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .top-navbar {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .progress-summary {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+  }
+  
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .hamburger-btn {
+    display: flex !important;
+  }
+}
