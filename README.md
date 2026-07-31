@@ -176,27 +176,56 @@ Deployment
 
 ---
 
-# Getting Started
+# 🚀 Getting Started
 
-Clone
+## Clone the Repository
 
 ```bash
-git clone https://github.com/mrstay-ai/MRStay-AI.git
+git clone https://github.com/<organization-or-username>/MRStay-AI.git
+cd MRStay-AI
 ```
 
-Install
+## Create a Virtual Environment
+
+### Windows
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+## Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Run
+## Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Update the required environment variables and API keys before running the application.
+
+## Start Backend
 
 ```bash
 uvicorn backend.main:app --reload
 ```
 
----
+The API will be available at:
+
+```
+http://127.0.0.1:8000
+```
 
 # Engineering Principles
 
