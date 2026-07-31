@@ -3,9 +3,6 @@
 </p>
 # 🏨 MRStay AI
 
-<p align="center">
-  <img src="assets/..." alt="MRStay AI Banner" width="100%">
-</p>
 
 <p align="center">
   <strong>AI-Powered Hospitality Platform</strong><br>
