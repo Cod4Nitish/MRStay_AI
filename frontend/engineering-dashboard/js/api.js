@@ -1,7 +1,11 @@
 // js/api.js
 // Dedicated API Layer for fetching data from the FastAPI Backend
 
-const API_BASE = "http://localhost:8000";
+const API_BASE =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://127.0.0.1:8000"
+        : "";
 
 const API = {
     /**

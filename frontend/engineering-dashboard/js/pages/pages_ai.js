@@ -1,6 +1,6 @@
 // js/pages/pages_ai.js
 
-window.renderAIModules = async function() {
+window.renderAiModules = async function() {
     const root = document.getElementById('app-root');
     root.innerHTML = `
         <div id="ai-modules-page" class="page-section active">
