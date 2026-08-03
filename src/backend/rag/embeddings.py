@@ -14,24 +14,30 @@ class Embeddings:
 
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
 
-        self.use_gemini = bool(
-            self.api_key and
-            self.api_key != "your_gemini_api_key_here"
+        self.use_gemini = (
+            self.api_key is not None
+            and self.api_key != ""
+            and self.api_key != "your_gemini_api_key_here"
         )
 
         if self.use_gemini:
 
+            print("=" * 60)
             print("Using Gemini Embeddings")
+            print("=" * 60)
 
             self.client = genai.Client(
                 api_key=self.api_key
             )
 
-            self.model_name = "text-embedding-004"
+            # Latest supported embedding model
+            self.model_name = "gemini-embedding-001"
 
         else:
 
-            print("Using local SentenceTransformer")
+            print("=" * 60)
+            print("Using Local SentenceTransformer")
+            print("=" * 60)
 
             self.local_model = SentenceTransformer(
                 "all-MiniLM-L6-v2"

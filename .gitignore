@@ -22,3 +22,6 @@ src/rag/embeddings/*
 
 # OS
 .DS_Store
+
+# ChromaDB
+src/backend/data/chroma_db/
