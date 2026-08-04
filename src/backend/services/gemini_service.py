@@ -59,3 +59,10 @@ class GeminiService:
 
 
 gemini_service = GeminiService() 
+
+print("\n========== AVAILABLE MODELS ==========\n")
+
+for model in gemini_service.client.models.list():
+    print(model.name)
+
+print("\n======================================\n")

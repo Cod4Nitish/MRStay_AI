@@ -19,7 +19,7 @@ class LLM:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model_name = model_name
 
-        if self.api_key and self.api_key != "your_gemini_api_key_here":
+        if self.api_key:
 
             self.client = genai.Client(
                 api_key=self.api_key
@@ -27,14 +27,14 @@ class LLM:
 
             self.is_configured = True
 
-            print("LLM initialized using Gemini")
+            print("Gemini Connected Successfully")
 
         else:
 
             self.client = None
             self.is_configured = False
 
-            print("Gemini API Key not found.")
+            print("Gemini API Key Missing")
 
     def generate(self, prompt: str) -> str:
 
@@ -47,6 +47,9 @@ class LLM:
 
         try:
 
+            print("API Key Loaded:", self.api_key[:12] + "...")
+            print("Using model:", self.model_name)
+            
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
