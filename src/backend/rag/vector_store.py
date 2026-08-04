@@ -66,7 +66,7 @@ class VectorStore:
         embeddings: List[List[float]]
     ):
 
-                if (
+        if (
             not chunks or
             not embeddings or
             len(chunks) != len(embeddings)
@@ -118,16 +118,31 @@ class VectorStore:
 
             metadatas.append(safe_metadata)
 
-        self.collection.upsert(
-            ids=ids,
-            embeddings=embeddings,
-            documents=documents,
-            metadatas=metadatas
-        )
+        try:
 
-        logger.info(
-            f"{len(ids)} document chunks indexed successfully."
-        )
+            existing = self.collection.get(ids=ids)
+
+            if existing.get("ids"):
+                logger.info(
+                    f"Skipping {len(existing['ids'])} existing documents."
+                )
+
+            self.collection.upsert(
+                ids=ids,
+                embeddings=embeddings,
+                documents=documents,
+                metadatas=metadatas
+            )
+
+            logger.info(
+                f"{len(ids)} document chunks indexed successfully."
+            )
+
+        except Exception as e:
+
+            logger.exception(e)
+
+            raise
 
     # ======================================================
     # Similarity Search
@@ -143,48 +158,56 @@ class VectorStore:
             f"Searching Top {n_results} Documents"
         )
 
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results
-        )
+        try:
 
-        formatted_results = []
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results
+            )
 
-                if (
-            results and
-            results.get("documents") and
-            results["documents"][0]
-        ):
+            formatted_results = []
 
-            for i in range(
-                len(results["documents"][0])
+            if (
+                results and
+                results.get("documents") and
+                results["documents"][0]
             ):
 
-                formatted_results.append({
+                for i in range(
+                    len(results["documents"][0])
+                ):
 
-                    "id":
-                        results["ids"][0][i],
+                    formatted_results.append({
 
-                    "content":
-                        results["documents"][0][i],
+                        "id":
+                            results["ids"][0][i],
 
-                    "metadata":
-                        results["metadatas"][0][i]
-                        if results.get("metadatas")
-                        else {},
+                        "content":
+                            results["documents"][0][i],
 
-                    "distance":
-                        results["distances"][0][i]
-                        if results.get("distances")
-                        else 0.0
+                        "metadata":
+                            results["metadatas"][0][i]
+                            if results.get("metadatas")
+                            else {},
 
-                })
+                        "distance":
+                            results["distances"][0][i]
+                            if results.get("distances")
+                            else 0.0
 
-        logger.info(
-            f"Retrieved {len(formatted_results)} matching documents."
-        )
+                    })
 
-        return formatted_results
+            logger.info(
+                f"Retrieved {len(formatted_results)} matching documents."
+            )
+
+            return formatted_results
+
+        except Exception as e:
+
+            logger.exception(e)
+
+            raise
 
     # ======================================================
     # Collection Statistics
@@ -192,7 +215,59 @@ class VectorStore:
 
     def count(self) -> int:
 
-        return self.collection.count()
+        try:
+
+            return self.collection.count()
+
+        except Exception as e:
+
+            logger.exception(e)
+
+            raise
+
+    # ======================================================
+    # Delete by ID
+    # ======================================================
+
+    def delete(self, ids: List[str]):
+
+        try:
+
+            self.collection.delete(ids=ids)
+
+            logger.info(
+                f"Deleted {len(ids)} documents."
+            )
+
+        except Exception as e:
+
+            logger.exception(e)
+
+            raise
+
+    # ======================================================
+    # Collection Info
+    # ======================================================
+
+    def info(self) -> Dict[str, Any]:
+
+        try:
+
+            return {
+
+                "collection": self.collection_name,
+
+                "documents": self.count(),
+
+                "database": self.db_path
+
+            }
+
+        except Exception as e:
+
+            logger.exception(e)
+
+            raise
 
     # ======================================================
     # Health Check
@@ -232,24 +307,58 @@ class VectorStore:
 
     def reset(self):
 
-        logger.warning(
-            "Resetting ChromaDB Collection..."
-        )
+        try:
 
-        self.client.delete_collection(
-            self.collection_name
-        )
+            logger.warning(
+                "Resetting ChromaDB Collection..."
+            )
 
-        self.collection = self.client.get_or_create_collection(
+            self.client.delete_collection(
+                self.collection_name
+            )
 
-            name=self.collection_name,
+            self.collection = self.client.get_or_create_collection(
 
-            metadata={
-                "hnsw:space": "cosine"
+                name=self.collection_name,
+
+                metadata={
+                    "hnsw:space": "cosine"
+                }
+
+            )
+
+            logger.info(
+                "Collection Reset Completed."
+            )
+
+        except Exception as e:
+
+            logger.exception(e)
+
+            raise
+
+    # ======================================================
+    # Enterprise Statistics
+    # ======================================================
+
+    def statistics(self) -> Dict[str, Any]:
+
+        try:
+
+            return {
+
+                "collection": self.collection_name,
+
+                "total_documents": self.count(),
+
+                "database_path": self.db_path,
+
+                "status": "healthy"
+
             }
 
-        )
+        except Exception as e:
 
-        logger.info(
-            "Collection Reset Completed."
-        )
+            logger.exception(e)
+
+            raise
