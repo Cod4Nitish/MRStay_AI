@@ -1,49 +1,123 @@
+import logging
 import os
+from datetime import datetime
+from typing import Any, Dict, List
+
 import chromadb
-from typing import List, Dict, Any
+
+logger = logging.getLogger(__name__)
+
 
 class VectorStore:
     """
-    Interface for ChromaDB vector storage.
+    ==========================================================
+    MRStay AI
+    Enterprise ChromaDB Vector Store
+    ==========================================================
     """
-    def __init__(self, db_path: str, collection_name: str = "mrstay_docs"):
-        # Ensure the directory exists
-        os.makedirs(db_path, exist_ok=True)
-        self.client = chromadb.PersistentClient(path=db_path)
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name,
-            metadata={"hnsw:space": "cosine"}
+
+    def __init__(
+        self,
+        db_path: str,
+        collection_name: str = "mrstay_docs"
+    ):
+
+        self.db_path = db_path
+        self.collection_name = collection_name
+
+        logger.info("=" * 60)
+        logger.info("Initializing Enterprise Vector Store")
+
+        os.makedirs(
+            self.db_path,
+            exist_ok=True
         )
 
-    def add_documents(self, chunks: List[Dict[str, Any]], embeddings: List[List[float]]):
-        """
-        Adds text chunks and their corresponding embeddings to ChromaDB.
-        """
-        if not chunks or not embeddings or len(chunks) != len(embeddings):
-            raise ValueError("Chunks and embeddings must be non-empty and of equal length.")
+        self.client = chromadb.PersistentClient(
+            path=self.db_path
+        )
+
+        self.collection = self.client.get_or_create_collection(
+            name=self.collection_name,
+            metadata={
+                "hnsw:space": "cosine",
+                "application": "MRStay AI",
+                "created_at": str(datetime.now())
+            }
+        )
+
+        logger.info(
+            f"Collection : {self.collection_name}"
+        )
+
+        logger.info(
+            f"Database : {self.db_path}"
+        )
+
+        logger.info("=" * 60)
+
+    # ======================================================
+    # Add Documents
+    # ======================================================
+
+    def add_documents(
+        self,
+        chunks: List[Dict[str, Any]],
+        embeddings: List[List[float]]
+    ):
+
+                if (
+            not chunks or
+            not embeddings or
+            len(chunks) != len(embeddings)
+        ):
+            raise ValueError(
+                "Chunks and embeddings must have the same length."
+            )
 
         ids = []
         documents = []
         metadatas = []
-        
-        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            # Create a unique ID for each chunk based on filename and index
-            source = chunk['metadata'].get('source', 'unknown')
-            chunk_index = chunk['metadata'].get('chunk_index', i)
+
+        for index, (chunk, embedding) in enumerate(
+            zip(chunks, embeddings)
+        ):
+
+            metadata = chunk.get("metadata", {})
+
+            source = metadata.get(
+                "source",
+                "unknown"
+            )
+
+            chunk_index = metadata.get(
+                "chunk_index",
+                index
+            )
+
             doc_id = f"{source}_{chunk_index}"
-            
+
             ids.append(doc_id)
-            documents.append(chunk['content'])
-            
-            # Ensure metadata values are basic types (str, int, float, bool)
-            safe_meta = {}
-            for k, v in chunk['metadata'].items():
-                if isinstance(v, (str, int, float, bool)):
-                    safe_meta[k] = v
+
+            documents.append(
+                chunk["content"]
+            )
+
+            safe_metadata = {}
+
+            for key, value in metadata.items():
+
+                if isinstance(
+                    value,
+                    (str, int, float, bool)
+                ):
+                    safe_metadata[key] = value
+
                 else:
-                    safe_meta[k] = str(v)
-            metadatas.append(safe_meta)
-            
+                    safe_metadata[key] = str(value)
+
+            metadatas.append(safe_metadata)
+
         self.collection.upsert(
             ids=ids,
             embeddings=embeddings,
@@ -51,24 +125,131 @@ class VectorStore:
             metadatas=metadatas
         )
 
-    def similarity_search(self, query_embedding: List[float], n_results: int = 5) -> List[Dict[str, Any]]:
-        """
-        Searches for the most similar documents given a query embedding.
-        """
+        logger.info(
+            f"{len(ids)} document chunks indexed successfully."
+        )
+
+    # ======================================================
+    # Similarity Search
+    # ======================================================
+
+    def similarity_search(
+        self,
+        query_embedding: List[float],
+        n_results: int = 5
+    ) -> List[Dict[str, Any]]:
+
+        logger.info(
+            f"Searching Top {n_results} Documents"
+        )
+
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=n_results
         )
-        
-        # Format results
+
         formatted_results = []
-        if results and results['documents'] and results['documents'][0]:
-            for i in range(len(results['documents'][0])):
+
+                if (
+            results and
+            results.get("documents") and
+            results["documents"][0]
+        ):
+
+            for i in range(
+                len(results["documents"][0])
+            ):
+
                 formatted_results.append({
-                    "content": results['documents'][0][i],
-                    "metadata": results['metadatas'][0][i] if results['metadatas'] else {},
-                    "distance": results['distances'][0][i] if results['distances'] else 0.0,
-                    "id": results['ids'][0][i]
+
+                    "id":
+                        results["ids"][0][i],
+
+                    "content":
+                        results["documents"][0][i],
+
+                    "metadata":
+                        results["metadatas"][0][i]
+                        if results.get("metadatas")
+                        else {},
+
+                    "distance":
+                        results["distances"][0][i]
+                        if results.get("distances")
+                        else 0.0
+
                 })
-                
+
+        logger.info(
+            f"Retrieved {len(formatted_results)} matching documents."
+        )
+
         return formatted_results
+
+    # ======================================================
+    # Collection Statistics
+    # ======================================================
+
+    def count(self) -> int:
+
+        return self.collection.count()
+
+    # ======================================================
+    # Health Check
+    # ======================================================
+
+    def health(self) -> Dict[str, Any]:
+
+        try:
+
+            return {
+
+                "success": True,
+
+                "collection": self.collection_name,
+
+                "documents": self.count(),
+
+                "database_path": self.db_path
+
+            }
+
+        except Exception as error:
+
+            logger.exception(error)
+
+            return {
+
+                "success": False,
+
+                "error": str(error)
+
+            }
+
+    # ======================================================
+    # Reset Collection
+    # ======================================================
+
+    def reset(self):
+
+        logger.warning(
+            "Resetting ChromaDB Collection..."
+        )
+
+        self.client.delete_collection(
+            self.collection_name
+        )
+
+        self.collection = self.client.get_or_create_collection(
+
+            name=self.collection_name,
+
+            metadata={
+                "hnsw:space": "cosine"
+            }
+
+        )
+
+        logger.info(
+            "Collection Reset Completed."
+        )
