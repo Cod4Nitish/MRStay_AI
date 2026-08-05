@@ -86,9 +86,9 @@ class VectorStore:
             metadata = chunk.get("metadata", {})
 
             source = metadata.get(
-                "source",
-                "unknown"
-            )
+                 "filename",
+            metadata.get("source", "unknown")
+        )
 
             chunk_index = metadata.get(
                 "chunk_index",
