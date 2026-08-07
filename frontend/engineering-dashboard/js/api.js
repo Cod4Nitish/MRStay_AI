@@ -18,6 +18,8 @@ window.API_STATUS = {
     lastError: null
 };
 
+window.API_ACTIVITY_LOG = window.API_ACTIVITY_LOG || [];
+
 const API = {
 
     // ==================================================
@@ -77,6 +79,17 @@ window.API_STATUS.lastUpdated =
     new Date().toISOString();
 window.API_STATUS.lastError = null;
 
+window.API_ACTIVITY_LOG.unshift({
+    time: new Date().toLocaleTimeString(),
+    endpoint,
+    status: response.status,
+    ok: true
+});
+
+if (window.API_ACTIVITY_LOG.length > 20) {
+    window.API_ACTIVITY_LOG.length = 20;
+}
+
 // Normalize API Response
 if (
     responseData &&
@@ -119,6 +132,17 @@ return responseData;
                 );
 
             }
+
+            window.API_ACTIVITY_LOG.unshift({
+    time: new Date().toLocaleTimeString(),
+    endpoint,
+    status: error.name === "AbortError" ? 408 : 500,
+    ok: false
+});
+
+if (window.API_ACTIVITY_LOG.length > 20) {
+    window.API_ACTIVITY_LOG.length = 20;
+}
 
             return {
                 success: false,
