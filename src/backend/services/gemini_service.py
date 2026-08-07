@@ -24,7 +24,7 @@ class GeminiService:
             api_key=GEMINI_API_KEY
         )
 
-        self.model = "gemini-2.5-flash-lite"
+        self.model = "gemini-3.5-flash"
 
         print("Gemini Client Initialized")
         print("Using Model:", self.model)

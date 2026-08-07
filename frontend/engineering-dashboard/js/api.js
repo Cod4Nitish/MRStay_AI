@@ -70,14 +70,23 @@ const API = {
 
             }
 
-            const data = await response.json();
+            const responseData = await response.json();
 
-            window.API_STATUS.connected = true;
-            window.API_STATUS.lastUpdated =
-                new Date().toISOString();
-            window.API_STATUS.lastError = null;
+window.API_STATUS.connected = true;
+window.API_STATUS.lastUpdated =
+    new Date().toISOString();
+window.API_STATUS.lastError = null;
 
-                        return data;
+// Normalize API Response
+if (
+    responseData &&
+    typeof responseData === "object" &&
+    "data" in responseData
+) {
+    return responseData.data;
+}
+
+return responseData;
 
         } catch (error) {
 

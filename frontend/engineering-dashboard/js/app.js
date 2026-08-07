@@ -83,8 +83,36 @@ function handleHashChange() {
         }
     });
     
-    // Construct render function name (e.g. #rag_pipeline -> renderRagPipeline)
-    const functionName = 'render' + hash.charAt(0).toUpperCase() + hash.slice(1).replace(/_([a-z])/g, (m, p1) => p1.toUpperCase());
+    const ROUTES = {
+    overview: "renderOverview",
+    sprint: "renderSprint",
+    focus: "renderFocus",
+    kanban: "renderKanban",
+
+    backend: "renderBackend",
+    console: "renderConsole",
+    testing: "renderTesting",
+    git: "renderGit",
+
+    ai_modules: "renderAiModules",
+    rag: "renderRAG",
+    knowledge: "renderKnowledge",
+    business_docs: "renderBusinessDocs",
+    docs: "renderDocs",
+    analytics: "renderAnalytics",
+
+    activity: "renderActivity",
+    notifications: "renderNotifications",
+    settings: "renderSettings"
+};
+
+const functionName =
+    ROUTES[hash] ||
+    (
+        "render" +
+        hash.charAt(0).toUpperCase() +
+        hash.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+    );
     
     // Call the corresponding module's render function
     if (typeof window[functionName] === 'function') {
@@ -170,12 +198,12 @@ function setupAIChatWidget() {
     
     if (toggleBtn && panel) {
         toggleBtn.addEventListener('click', () => {
-            panel.classList.toggle('hidden');
+            panel.classList.toggle('active');
         });
         
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                panel.classList.add('hidden');
+                panel.classList.remove('active');
             });
         }
         
@@ -256,3 +284,30 @@ function setupAIChatWidget() {
         console.warn('AI Chat Widget elements not fully found in DOM.');
     }
 }
+/*
+--------------------------------------------------
+Top Navigation Date
+--------------------------------------------------
+*/
+
+function updateNavDate() {
+
+    const navDate = document.getElementById("navDate");
+
+    if (!navDate) return;
+
+    const now = new Date();
+
+    navDate.textContent = now.toLocaleString("en-IN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+
+}
+
+updateNavDate();
+setInterval(updateNavDate, 60000);

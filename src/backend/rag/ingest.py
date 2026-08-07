@@ -36,6 +36,7 @@ def ingest_documents() -> Dict[str, Any]:
 
         loader = DocumentLoader(directory_path=DOCUMENTS_PATH)
         docs = loader.load_documents()
+        
         logger.info(f"Loaded {len(docs)} documents.")
 
         if not docs:
