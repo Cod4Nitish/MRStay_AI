@@ -7,11 +7,13 @@
 const API_VERSION = "v1";
 
 const API_BASE =
+localStorage.getItem("mrstay_api_base") ||
+(
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1"
         ? "http://127.0.0.1:8000"
-        : "";
-
+        : ""
+);
 window.API_STATUS = {
     connected: false,
     lastUpdated: null,
@@ -26,8 +28,10 @@ const API = {
     // Enterprise Configuration
     // ==================================================
 
-    REQUEST_TIMEOUT: 10000,
-    MAX_RETRIES: 2,
+    REQUEST_TIMEOUT:
+    parseInt(localStorage.getItem("mrstay_request_timeout")) || 10000,
+    MAX_RETRIES:
+    parseInt(localStorage.getItem("mrstay_retry_count")) || 2,
 
     // ==================================================
     // Generic GET Request
@@ -50,7 +54,7 @@ const API = {
         }, this.REQUEST_TIMEOUT);
 
         try {
-
+ 
             const response = await fetch(
                 `${API_BASE}${endpoint}`,
                 {

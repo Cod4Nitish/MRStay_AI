@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parents[3]
 
 ENV_FILE = BASE_DIR / ".env"
 
-load_dotenv(ENV_FILE)
+load_dotenv(ENV_FILE, override=True)
 
 # ==========================================================
 # Project Information

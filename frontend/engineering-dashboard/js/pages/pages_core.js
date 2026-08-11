@@ -33,7 +33,7 @@ window.renderOverview = async function () {
 
         ]);
 
-        console.log("Executive Overview", {
+        console.log("Executive Overview", { 
             health,
             telemetry,
             git,

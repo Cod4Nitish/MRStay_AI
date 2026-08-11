@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MRStay AI Engineering Control Center</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2">
   <link rel="stylesheet" href="css/sidebar.css">
   <link rel="stylesheet" href="css/cards.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -196,7 +196,14 @@
   <div class="ai-chat-widget" id="ai-chat-widget">
     <div class="ai-chat-panel" id="ai-chat-panel">
       <div class="ai-chat-header">
-        <span><i data-lucide="bot" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;"></i> Ask MRStay Engineering AI</span>
+        <span>
+    <i data-lucide="bot" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;"></i>
+    MRStay Engineering AI
+    <span id="ai-chat-status-dot" class="ai-status-dot"></span>
+</span>
+<button id="ai-chat-clear" title="Clear chat" style="background:none;border:none;color:white;cursor:pointer;margin-right:8px;">
+    <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+</button>
         <button id="ai-chat-close" style="background:none;border:none;color:white;cursor:pointer;"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
       </div>
       <div class="ai-chat-messages" id="ai-chat-messages">
@@ -205,7 +212,7 @@
         </div>
       </div>
       <div class="ai-chat-input-area">
-        <input type="text" id="ai-chat-input" placeholder="Ask about tasks, servers, RAG...">
+        <textarea id="ai-chat-input" rows="1" placeholder="Ask about tasks, servers, RAG..."></textarea>
         <button id="ai-chat-send"><i data-lucide="send" style="width:16px;height:16px;"></i></button>
       </div>
     </div>
@@ -218,12 +225,13 @@
   <script src="js/db.js"></script>
   <script src="js/data.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/data/sprint.js"></script>
   <script src="js/api.js"></script>
   
   <script src="js/pages/pages_core.js"></script>
   <script src="js/pages/pages_ai.js"></script>
   <script src="js/pages/pages_system.js"></script>
-
+  <script src="js/ai-chat.js?v=3"></script>
   <script src="js/app.js"></script>
 
 </body>

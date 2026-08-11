@@ -1,70 +1,202 @@
-/**
- * charts.js — Chart.js Analytics with Dark Theme
- */
+// frontend/engineering-dashboard/js/ai-chat.js
+// Connects existing AI Chat widget to real backend /api/gemini/chat
 
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.borderColor = '#1e293b';
-Chart.defaults.font.family = 'Inter';
+(function () {
 
-function initCharts() {
-  // Only init if user is logged in
-  if (typeof Auth !== 'undefined' && !Auth.isLoggedIn()) return;
-  
-  // Query Volume Chart (Bar)
-  const queryCanvas = document.getElementById('queryChart');
-  if (queryCanvas) {
-    new Chart(queryCanvas, {
-      type: 'bar',
-      data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [
-          { label: 'Successful', data: [420, 380, 510, 470, 540, 280, 350], backgroundColor: 'rgba(99, 102, 241, 0.7)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 6 },
-          { label: 'Failed', data: [25, 18, 32, 22, 28, 12, 15], backgroundColor: 'rgba(239, 68, 68, 0.7)', borderColor: '#ef4444', borderWidth: 1, borderRadius: 6 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top' } },
-        scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' }, beginAtZero: true, ticks: { color: '#94a3b8' } } }
-      }
-    });
-  }
-  
-  // Response Distribution (Doughnut)
-  const responseCanvas = document.getElementById('responseChart');
-  if (responseCanvas) {
-    new Chart(responseCanvas, {
-      type: 'doughnut',
-      data: {
-        labels: ['Successful (94.2%)', 'Client Errors (3.1%)', 'Server Errors (1.8%)', 'Timeouts (0.9%)'],
-        datasets: [{ data: [94.2, 3.1, 1.8, 0.9], backgroundColor: ['#6366f1', '#f59e0b', '#ef4444', '#64748b'], borderColor: '#151c2c', borderWidth: 3 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '70%',
-        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
-      }
-    });
-  }
-  
-  // Response Time Trend (Line)
-  const rtCanvas = document.getElementById('responseTimeChart');
-  if (rtCanvas) {
-    const ctx = rtCanvas.getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
-    gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
-    new Chart(rtCanvas, {
-      type: 'line',
-      data: {
-        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-        datasets: [{ label: 'Avg Response Time (ms)', data: [520, 480, 410, 350, 340], borderColor: '#10b981', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: '#10b981', pointBorderColor: '#10b981', pointRadius: 5, pointHoverRadius: 8 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: { x: { grid: { display: false } }, y: { grid: { color: '#1e293b' }, ticks: { callback: val => val + 'ms' } } }
-      }
-    });
-  }
-}
+    const messagesEl = document.getElementById("ai-chat-messages");
+    const inputEl = document.getElementById("ai-chat-input");
+    const sendBtn = document.getElementById("ai-chat-send");
+    const toggleBtn = document.getElementById("ai-chat-toggle");
+    const closeBtn = document.getElementById("ai-chat-close");
+    const clearBtn = document.getElementById("ai-chat-clear");
+    const panelEl = document.getElementById("ai-chat-panel");
+    const statusDot = document.getElementById("ai-chat-status-dot");
 
-document.addEventListener('DOMContentLoaded', initCharts);
+    if (!messagesEl || !inputEl || !sendBtn) {
+        console.warn("AI Chat: widget elements not found, skipping init.");
+        return;
+    }
+
+    const QUICK_PROMPTS = [
+        "System health",
+        "Today's tasks",
+        "Git activity",
+        "Explain current project"
+    ];
+
+    function getApiBase() {
+        return localStorage.getItem("mrstay_api_base") ||
+               window.API_BASE ||
+               "http://127.0.0.1:8000";
+    }
+
+    function updateStatusDot() {
+        if (!statusDot) return;
+        const connected = window.API_STATUS?.connected === true;
+        statusDot.classList.toggle("offline", !connected);
+    }
+
+    function appendMessage(text, sender) {
+        const wrapper = document.createElement("div");
+        wrapper.className = `chat-message ${sender === "user" ? "user-message" : "ai-message"}`;
+
+        const content = document.createElement("div");
+        content.className = "message-content";
+        content.textContent = text;
+
+        wrapper.appendChild(content);
+        messagesEl.appendChild(wrapper);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        return wrapper;
+    }
+
+    function appendLoading() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "chat-message ai-message";
+        wrapper.id = "ai-chat-loading";
+
+        const content = document.createElement("div");
+        content.className = "message-content";
+        content.textContent = "Thinking...";
+        content.style.opacity = "0.6";
+
+        wrapper.appendChild(content);
+        messagesEl.appendChild(wrapper);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeLoading() {
+        const loadingEl = document.getElementById("ai-chat-loading");
+        if (loadingEl) loadingEl.remove();
+    }
+
+    function renderQuickPrompts() {
+        if (document.getElementById("ai-chat-quick-prompts")) return;
+
+        const bar = document.createElement("div");
+        bar.className = "ai-chat-quick-prompts";
+        bar.id = "ai-chat-quick-prompts";
+
+        QUICK_PROMPTS.forEach(prompt => {
+            const btn = document.createElement("button");
+            btn.className = "ai-quick-btn";
+            btn.textContent = prompt;
+            btn.addEventListener("click", () => {
+                inputEl.value = prompt;
+                sendMessage();
+            });
+            bar.appendChild(btn);
+        });
+
+        panelEl.insertBefore(bar, panelEl.querySelector(".ai-chat-input-area"));
+    }
+
+    async function sendMessage() {
+        const prompt = inputEl.value.trim();
+        if (!prompt) return;
+
+        appendMessage(prompt, "user");
+        inputEl.value = "";
+        inputEl.style.height = "auto";
+        sendBtn.disabled = true;
+        appendLoading();
+
+        try {
+
+            const res = await fetch(`${getApiBase()}/api/gemini/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ prompt })
+            });
+
+            removeLoading();
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+
+            if (data && data.success && data.response) {
+                appendMessage(data.response, "ai");
+            } else {
+                appendMessage("Sorry, I couldn't generate a response right now.", "ai");
+            }
+
+            if (window.API_ACTIVITY_LOG) {
+                window.API_ACTIVITY_LOG.unshift({
+                    time: new Date().toLocaleTimeString(),
+                    endpoint: "/api/gemini/chat",
+                    status: res.status,
+                    ok: true
+                });
+            }
+
+        } catch (error) {
+
+            removeLoading();
+            console.error("AI Chat Error:", error);
+            appendMessage("⚠️ Unable to reach the AI backend. Please check the server and try again.", "ai");
+
+            if (window.API_ACTIVITY_LOG) {
+                window.API_ACTIVITY_LOG.unshift({
+                    time: new Date().toLocaleTimeString(),
+                    endpoint: "/api/gemini/chat",
+                    status: 500,
+                    ok: false
+                });
+            }
+
+        } finally {
+            sendBtn.disabled = false;
+            updateStatusDot();
+            inputEl.focus();
+        }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    inputEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+        // Shift+Enter = default behavior (new line) — no action needed
+    });
+
+    inputEl.addEventListener("input", function () {
+        inputEl.style.height = "auto";
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 100) + "px";
+    });
+
+    if (toggleBtn && panelEl) {
+        toggleBtn.addEventListener("click", function () {
+            panelEl.classList.toggle("active");
+            if (panelEl.classList.contains("active")) {
+                renderQuickPrompts();
+                updateStatusDot();
+                inputEl.focus();
+            }
+        });
+    }
+
+    if (closeBtn && panelEl) {
+        closeBtn.addEventListener("click", function () {
+            panelEl.classList.remove("active");
+        });
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+            messagesEl.innerHTML = "";
+            appendMessage("Hello! I am your engineering operations assistant. How can I help you?", "ai");
+        });
+    }
+
+    console.log("%cMRStay AI Chat connected to /api/gemini/chat", "color:#00d084;font-weight:bold;");
+
+})();
+ 

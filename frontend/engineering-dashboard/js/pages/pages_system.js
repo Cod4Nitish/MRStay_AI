@@ -1,3 +1,9 @@
+function renderToAppRoot(html) {
+    const root = document.getElementById("app-root");
+    if (!root) return;
+    root.innerHTML = html;
+}
+
 window.renderBackend = async function () {
 
     const root = document.getElementById("app-root");
@@ -703,4 +709,392 @@ window.renderActivity = async function () {
         `;
     }
 };
+
+window.renderNotifications = async function () {
+
+    const root = document.getElementById("app-root");
+    if (!root) return;
+
+    root.innerHTML = `
+        <div id="notifications-page" class="page-section active">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Notifications</h2>
+                    <p class="section-subtitle">System-generated alerts from live data...</p>
+                </div>
+            </div>
+            <div style="padding:40px;text-align:center;color:var(--text-muted);">
+                Loading notifications...
+            </div>
+        </div>
+    `;
+
+    try {
+
+        const [git, testing] = await Promise.all([
+            API.getGit(),
+            API.getTesting()
+        ]);
+
+        const backendConnected = window.API_STATUS?.connected === true;
+        const log = window.API_ACTIVITY_LOG || [];
+        const successCount = log.filter(e => e.ok).length;
+
+        const notifications = [];
+
+        notifications.push({
+            icon: backendConnected ? "🟢" : "🔴",
+            title: backendConnected ? "Backend Connected" : "Backend Disconnected",
+            body: backendConnected
+                ? "Backend connection established successfully."
+                : "Backend is currently unreachable."
+        });
+
+        if (testing && testing.unit_tests) {
+            notifications.push({
+                icon: "🟢",
+                title: "Testing Completed",
+                body: `Unit Tests — ${testing.unit_tests}`
+            });
+        }
+
+        if (git && git.latest_commit) {
+            notifications.push({
+                icon: "🟢",
+                title: "Git Repository Updated",
+                body: `Latest commit on ${git.current_branch}: ${git.latest_commit} (${git.commits_today ?? 0} commits today)`
+            });
+        }
+
+        if (log.length > 0) {
+            notifications.push({
+                icon: "🟢",
+                title: "API Activity",
+                body: `${successCount} successful API request(s) in this session.`
+            });
+        }
+
+        const rows = notifications.length
+            ? notifications.map(n => `
+                <div style="display:flex;gap:14px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                    <span style="font-size:20px;">${n.icon}</span>
+                    <div>
+                        <div style="font-weight:600;">${n.title}</div>
+                        <div style="color:var(--text-muted);font-size:14px;">${n.body}</div>
+                    </div>
+                </div>
+            `).join("")
+            : `<div style="color:var(--text-muted);padding:20px 0;">No notifications yet.</div>`;
+
+        root.innerHTML = `
+            <div id="notifications-page" class="page-section active">
+
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Notifications</h2>
+                        <p class="section-subtitle">System-generated alerts from live data...</p>
+                    </div>
+                </div>
+
+                <div class="card" style="padding:20px;">
+                    ${rows}
+                </div>
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error("Notifications Render Error:", error);
+
+        root.innerHTML = `
+            <div id="notifications-page" class="page-section active">
+                <div class="card">
+                    <div class="card-content" style="text-align:center;padding:40px;">
+                        <h2>Unable to load Notifications</h2>
+                        <button class="btn btn-primary" onclick="window.renderNotifications()">Retry</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
+// ============ SETTINGS HELPERS ============
+
+window.mrstayApplyAutoRefresh = function () {
+    if (window._mrstayRefreshTimer) {
+        clearInterval(window._mrstayRefreshTimer);
+        window._mrstayRefreshTimer = null;
+    }
+
+    const interval = localStorage.getItem("mrstay_auto_refresh") || "off";
+    if (interval === "off") return;
+
+    const ms = parseInt(interval, 10);
+    if (!ms) return;
+
+    window._mrstayRefreshTimer = setInterval(() => {
+        const hash = (window.location.hash || "").replace("#", "");
+        const map = {
+            backend: "renderBackend",
+            testing: "renderTesting",
+            git: "renderGit",
+            console: "renderConsole",
+            analytics: "renderAnalytics",
+            activity: "renderActivity",
+            notifications: "renderNotifications",
+            settings: "renderSettings"
+        };
+        const fn = map[hash];
+        if (fn && typeof window[fn] === "function") {
+            window[fn]();
+        }
+    }, ms);
+};
+
+window.mrstaySaveSettings = function () {
+    const demoMode = document.getElementById("set-demo-mode").checked;
+    const autoRefresh = document.getElementById("set-auto-refresh").value;
+    const apiBase = document.getElementById("set-api-base").value.trim();
+    const timeout = document.getElementById("set-timeout").value.trim();
+    const retries = document.getElementById("set-retries").value.trim();
+    const rememberPage = document.getElementById("set-remember-page").checked;
+    const apiLogging = document.getElementById("set-api-logging").checked;
+    const debugMode = document.getElementById("set-debug-mode").checked;
+    const consoleLogs = document.getElementById("set-console-logs").checked;
+
+    localStorage.setItem("mrstay_demo_mode", demoMode ? "true" : "false");
+    localStorage.setItem("mrstay_auto_refresh", autoRefresh);
+    localStorage.setItem("mrstay_api_base", apiBase);
+    localStorage.setItem("mrstay_request_timeout", timeout);
+    localStorage.setItem("mrstay_retry_count", retries);
+    localStorage.setItem("mrstay_remember_page", rememberPage ? "true" : "false");
+    localStorage.setItem("mrstay_api_logging", apiLogging ? "true" : "false");
+    localStorage.setItem("mrstay_debug_mode", debugMode ? "true" : "false");
+    localStorage.setItem("mrstay_console_logs", consoleLogs ? "true" : "false");
+
+    window.mrstayApplyAutoRefresh();
+
+    alert("Settings saved. Reload the page for API Base/Timeout/Retry changes to fully apply.");
+};
+
+window.mrstayTestBackend = async function () {
+    const resultEl = document.getElementById("set-test-result");
+    resultEl.textContent = "Testing...";
+
+    const base = localStorage.getItem("mrstay_api_base") || "http://127.0.0.1:8000";
+
+    try {
+        const res = await fetch(`${base}/health`);
+        if (res.ok) {
+            resultEl.textContent = "✅ Backend reachable (200 OK)";
+            resultEl.style.color = "#4ade80";
+        } else {
+            resultEl.textContent = `⚠️ Backend responded with ${res.status}`;
+            resultEl.style.color = "#facc15";
+        }
+    } catch (err) {
+        resultEl.textContent = "❌ Backend unreachable";
+        resultEl.style.color = "#f87171";
+    }
+};
+
+window.mrstayClearActivity = function () {
+    window.API_ACTIVITY_LOG = [];
+    alert("API Activity cleared.");
+};
+
+window.mrstayClearCache = function () {
+    const keep = ["mrstay_demo_mode", "mrstay_api_base"];
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("mrstay_") && !keep.includes(key)) {
+            localStorage.removeItem(key);
+        }
+    });
+    alert("Local cache cleared (core settings kept).");
+};
+
+window.mrstayResetDashboard = function () {
+    if (!confirm("This will reset all dashboard settings and reload. Continue?")) return;
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("mrstay_")) localStorage.removeItem(key);
+    });
+    location.reload();
+};
+
+window.mrstayExportSettings = function () {
+    const data = {};
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith("mrstay_")) data[key] = localStorage.getItem(key);
+    });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mrstay-settings-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+};
+
+window.mrstayImportSettingsFile = function (input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            Object.keys(data).forEach(key => {
+                if (key.startsWith("mrstay_")) localStorage.setItem(key, data[key]);
+            });
+            alert("Settings imported. Reloading...");
+            location.reload();
+        } catch (err) {
+            alert("Invalid settings file.");
+        }
+    };
+    reader.readAsText(file);
+};
+
+// ============ RENDER SETTINGS ============
+
+window.renderSettings = async function () {
+
+    const root = document.getElementById("app-root");
+    if (!root) return;
+
+    root.innerHTML = `
+        <div id="settings-page" class="page-section active">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Settings</h2>
+                    <p class="section-subtitle">System configuration and preferences...</p>
+                </div>
+            </div>
+            <div style="padding:40px;text-align:center;color:var(--text-muted);">
+                Loading settings...
+            </div>
+        </div>
+    `;
+
+    try {
+
+        const demoMode = localStorage.getItem("mrstay_demo_mode") === "true";
+        const autoRefresh = localStorage.getItem("mrstay_auto_refresh") || "off";
+        const apiBase = localStorage.getItem("mrstay_api_base") || window.API_BASE || "http://127.0.0.1:8000";
+        const timeout = localStorage.getItem("mrstay_request_timeout") || "10000";
+        const retries = localStorage.getItem("mrstay_retry_count") || "2";
+        const rememberPage = localStorage.getItem("mrstay_remember_page") === "true";
+        const apiLogging = localStorage.getItem("mrstay_api_logging") !== "false";
+        const debugMode = localStorage.getItem("mrstay_debug_mode") === "true";
+        const consoleLogs = localStorage.getItem("mrstay_console_logs") !== "false";
+
+        const backendConnected = window.API_STATUS?.connected === true;
+        const lastSync = window.API_STATUS?.lastUpdated
+            ? new Date(window.API_STATUS.lastUpdated).toLocaleTimeString()
+            : "--";
+
+        const section = (title, innerHtml) => `
+            <div class="card" style="padding:20px;margin-bottom:16px;">
+                <h3 style="margin-bottom:14px;">${title}</h3>
+                ${innerHtml}
+            </div>
+        `;
+
+        const row = (labelHtml, controlHtml) => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+                <span>${labelHtml}</span>
+                <span>${controlHtml}</span>
+            </div>
+        `;
+
+        root.innerHTML = `
+            <div id="settings-page" class="page-section active">
+
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Settings</h2>
+                        <p class="section-subtitle">System configuration and preferences...</p>
+                    </div>
+                </div>
+
+                ${section("System Configuration", `
+                    ${row("Demo Mode", `<input type="checkbox" id="set-demo-mode" ${demoMode ? "checked" : ""}>`)}
+                    ${row("Auto Refresh", `
+                        <select id="set-auto-refresh">
+                            <option value="off" ${autoRefresh === "off" ? "selected" : ""}>Off</option>
+                            <option value="5000" ${autoRefresh === "5000" ? "selected" : ""}>5 sec</option>
+                            <option value="10000" ${autoRefresh === "10000" ? "selected" : ""}>10 sec</option>
+                            <option value="30000" ${autoRefresh === "30000" ? "selected" : ""}>30 sec</option>
+                            <option value="60000" ${autoRefresh === "60000" ? "selected" : ""}>1 min</option>
+                        </select>
+                    `)}
+                    ${row("API Base URL", `<input type="text" id="set-api-base" value="${apiBase}" style="width:220px;">`)}
+                    ${row("Request Timeout (ms)", `<input type="number" id="set-timeout" value="${timeout}" style="width:100px;">`)}
+                    ${row("Retry Count", `<input type="number" id="set-retries" value="${retries}" style="width:60px;">`)}
+                    <div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
+                        <button class="btn btn-primary" onclick="window.mrstayTestBackend()">Test Backend</button>
+                        <span id="set-test-result" style="color:var(--text-muted);"></span>
+                    </div>
+                `)}
+
+                ${section("Developer Preferences", `
+                    ${row("Remember Last Open Page", `<input type="checkbox" id="set-remember-page" ${rememberPage ? "checked" : ""}>`)}
+                    ${row("Enable API Activity Logging", `<input type="checkbox" id="set-api-logging" ${apiLogging ? "checked" : ""}>`)}
+                    ${row("Show Debug Information", `<input type="checkbox" id="set-debug-mode" ${debugMode ? "checked" : ""}>`)}
+                    ${row("Enable Console Logs", `<input type="checkbox" id="set-console-logs" ${consoleLogs ? "checked" : ""}>`)}
+                `)}
+
+                ${section("Diagnostics", `
+                    ${row("Frontend", `<span style="color:#4ade80;">✅ Online</span>`)}
+                    ${row("Backend", backendConnected ? `<span style="color:#4ade80;">✅ Connected</span>` : `<span style="color:#f87171;">❌ Disconnected</span>`)}
+                    ${row("API Client", `<span style="color:#4ade80;">✅ Ready</span>`)}
+                    ${row("Last Sync", lastSync)}
+                `)}
+
+                ${section("Maintenance", `
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="window.mrstayClearActivity()">Clear API Activity</button>
+                        <button class="btn btn-primary" onclick="window.mrstayClearCache()">Clear Local Cache</button>
+                        <button class="btn btn-primary" onclick="window.mrstayResetDashboard()">Reset Dashboard</button>
+                        <button class="btn btn-primary" onclick="window.mrstayExportSettings()">Export Settings</button>
+                        <label class="btn btn-primary" style="cursor:pointer;">
+                            Import Settings
+                            <input type="file" accept=".json" style="display:none;" onchange="window.mrstayImportSettingsFile(this)">
+                        </label>
+                    </div>
+                `)}
+
+                ${section("About", `
+                    ${row("Dashboard Version", "v1.0")}
+                    ${row("Environment", "Development")}
+                    ${row("Browser", navigator.userAgent.split(") ")[0] + ")")}
+                    ${row("Platform", navigator.platform || "Unknown")}
+                `)}
+
+                <div style="margin-top:8px;">
+                    <button class="btn btn-primary" onclick="window.mrstaySaveSettings()">Save Settings</button>
+                </div>
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        console.error("Settings Render Error:", error);
+
+        root.innerHTML = `
+            <div id="settings-page" class="page-section active">
+                <div class="card">
+                    <div class="card-content" style="text-align:center;padding:40px;">
+                        <h2>Unable to load Settings</h2>
+                        <button class="btn btn-primary" onclick="window.renderSettings()">Retry</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+
 

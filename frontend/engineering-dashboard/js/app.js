@@ -39,9 +39,6 @@ function initDashboard() {
     
     // Periodic health check (every 5 minutes)
     setInterval(calculateHealthScore, 5 * 60 * 1000);
-
-    // Setup AI Chat Widget logic
-    setupAIChatWidget();
 }
 
 function setupClock() {
@@ -84,35 +81,35 @@ function handleHashChange() {
     });
     
     const ROUTES = {
-    overview: "renderOverview",
-    sprint: "renderSprint",
-    focus: "renderFocus",
-    kanban: "renderKanban",
+        overview: "renderOverview",
+        sprint: "renderSprint",
+        focus: "renderFocus",
+        kanban: "renderKanban",
 
-    backend: "renderBackend",
-    console: "renderConsole",
-    testing: "renderTesting",
-    git: "renderGit",
+        backend: "renderBackend",
+        console: "renderConsole",
+        testing: "renderTesting",
+        git: "renderGit",
 
-    ai_modules: "renderAiModules",
-    rag: "renderRAG",
-    knowledge: "renderKnowledge",
-    business_docs: "renderBusinessDocs",
-    docs: "renderDocs",
-    analytics: "renderAnalytics",
+        ai_modules: "renderAiModules",
+        rag: "renderRAG",
+        knowledge: "renderKnowledge",
+        business_docs: "renderBusinessDocs",
+        docs: "renderDocs",
+        analytics: "renderAnalytics",
 
-    activity: "renderActivity",
-    notifications: "renderNotifications",
-    settings: "renderSettings"
-};
+        activity: "renderActivity",
+        notifications: "renderNotifications",
+        settings: "renderSettings"
+    };
 
-const functionName =
-    ROUTES[hash] ||
-    (
-        "render" +
-        hash.charAt(0).toUpperCase() +
-        hash.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())
-    );
+    const functionName =
+        ROUTES[hash] ||
+        (
+            "render" +
+            hash.charAt(0).toUpperCase() +
+            hash.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())
+        );
     
     // Call the corresponding module's render function
     if (typeof window[functionName] === 'function') {
@@ -154,136 +151,36 @@ function calculateHealthScore() {
     
     let score = 100;
     
-    // Metric 1: Tasks - Penalize if backlog outweighs done items significantly
     const doneCount = tasks['Done']?.length || 0;
     const backlogCount = tasks['Backlog']?.length || 0;
     if (backlogCount > doneCount * 2) {
         score -= 10;
     }
     
-    // Metric 2: Backend - Penalize heavily for offline services
     const offlineServices = backend.services?.filter(s => s.status !== 'online').length || 0;
     score -= (offlineServices * 15);
     
-    // Metric 3: Testing - Penalize for failed test cases
     let failedTests = 0;
     if (testing.suites) {
         testing.suites.forEach(suite => failedTests += suite.failed);
     }
     score -= (failedTests * 5);
     
-    // Metric 4: Documentation - Minor penalty for poor documentation coverage
     if (!docs.items || docs.items.length === 0) {
         score -= 5;
     }
     
-    // Clamp score between 0 and 100
     score = Math.max(0, Math.min(100, score));
     
-    // Save updated score back to OVERVIEW DB
     const overview = DB.load(DB.KEYS.OVERVIEW, window.DEFAULT_DATA.OVERVIEW);
     overview.healthScore = score;
     DB.save(DB.KEYS.OVERVIEW, overview);
     
     console.log(`System Health Score calculated: ${score}/100`);
     
-    // Dispatch a custom event so the UI can update if Overview is currently visible
     window.dispatchEvent(new CustomEvent('healthScoreUpdated', { detail: score }));
 }
 
-function setupAIChatWidget() {
-    const toggleBtn = document.getElementById('ai-chat-toggle');
-    const panel = document.getElementById('ai-chat-panel');
-    const closeBtn = document.getElementById('ai-chat-close');
-    
-    if (toggleBtn && panel) {
-        toggleBtn.addEventListener('click', () => {
-            panel.classList.toggle('active');
-        });
-        
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                panel.classList.remove('active');
-            });
-        }
-        
-        const sendBtn = document.getElementById('ai-chat-send');
-        const inputField = document.getElementById('ai-chat-input');
-        const messagesArea = document.getElementById('ai-chat-messages');
-        
-        if (sendBtn && inputField && messagesArea) {
-            const handleSend = async () => {
-                const text = inputField.value.trim();
-                if (!text) return;
-                
-                // Add user message
-                const userMsg = document.createElement('div');
-                userMsg.className = 'chat-message user-message';
-                userMsg.innerHTML = `<div class="message-content">${text}</div>`;
-                messagesArea.appendChild(userMsg);
-                inputField.value = '';
-                
-                // Scroll to bottom
-                messagesArea.scrollTop = messagesArea.scrollHeight;
-                
-                // Add typing indicator
-                const typingMsg = document.createElement('div');
-                typingMsg.className = 'chat-message ai-message';
-                typingMsg.id = 'ai-typing-indicator';
-                typingMsg.innerHTML = `<div class="message-content"><i class="fas fa-spinner fa-spin"></i> Thinking...</div>`;
-                messagesArea.appendChild(typingMsg);
-                messagesArea.scrollTop = messagesArea.scrollHeight;
-
-                try {
-                    // Call Backend RAG API
-                    const response = await window.API.queryRAG(text);
-                    
-                    // Remove typing indicator
-                    const indicator = document.getElementById('ai-typing-indicator');
-                    if (indicator) indicator.remove();
-
-                    let answer = "Sorry, I could not process your request.";
-                    let sourcesHtml = "";
-
-                    if (response && response.success && response.data) {
-                        answer = response.data.answer;
-                        if (response.data.sources && response.data.sources.length > 0) {
-                            sourcesHtml = '<div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 5px;"><strong>Sources:</strong><ul>';
-                            response.data.sources.forEach(src => {
-                                sourcesHtml += `<li>${src.document} (Score: ${src.score})</li>`;
-                            });
-                            sourcesHtml += '</ul></div>';
-                        }
-                    }
-
-                    const aiMsg = document.createElement('div');
-                    aiMsg.className = 'chat-message ai-message';
-                    aiMsg.innerHTML = `<div class="message-content">${answer.replace(/\n/g, '<br>')}${sourcesHtml}</div>`;
-                    messagesArea.appendChild(aiMsg);
-
-                } catch (error) {
-                    console.error("AI Chat Error:", error);
-                    const indicator = document.getElementById('ai-typing-indicator');
-                    if (indicator) indicator.remove();
-                    
-                    const errMsg = document.createElement('div');
-                    errMsg.className = 'chat-message ai-message';
-                    errMsg.innerHTML = `<div class="message-content" style="color: var(--danger);">An error occurred connecting to the AI.</div>`;
-                    messagesArea.appendChild(errMsg);
-                }
-
-                messagesArea.scrollTop = messagesArea.scrollHeight;
-            };
-            
-            sendBtn.addEventListener('click', handleSend);
-            inputField.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleSend();
-            });
-        }
-    } else {
-        console.warn('AI Chat Widget elements not fully found in DOM.');
-    }
-}
 /*
 --------------------------------------------------
 Top Navigation Date
@@ -291,13 +188,10 @@ Top Navigation Date
 */
 
 function updateNavDate() {
-
     const navDate = document.getElementById("navDate");
-
     if (!navDate) return;
 
     const now = new Date();
-
     navDate.textContent = now.toLocaleString("en-IN", {
         weekday: "long",
         day: "2-digit",
@@ -306,7 +200,6 @@ function updateNavDate() {
         hour: "2-digit",
         minute: "2-digit"
     });
-
 }
 
 updateNavDate();
