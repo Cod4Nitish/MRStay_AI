@@ -13,7 +13,7 @@ class LLM:
     def __init__(
         self,
         api_key: str = None,
-        model_name="gemini-3.5-flash"
+       model_name="gemini-3.1-flash-lite"
     ):
 
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")

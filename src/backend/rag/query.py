@@ -41,9 +41,11 @@ class RAGQueryEngine:
             "Enterprise Query Engine Initialized"
         )
 
-    def query(self, user_question: str) -> Dict[str, Any]:
+    def query(self, user_question: str, property_filter: str = None) -> Dict[str, Any]:
         """
         Executes the full RAG pipeline for a given question.
+        If property_filter is given, retrieval is restricted to
+        that property's documents only.
         Returns a dictionary with 'answer' and 'sources'.
         """
 
@@ -62,7 +64,11 @@ class RAGQueryEngine:
 
         try:
             # 1 & 2: Retrieve relevant documents
-            raw_results = self.retriever.retrieve(user_question, top_k=3)
+            raw_results = self.retriever.retrieve(
+                user_question,
+                top_k=3,
+                property_filter=property_filter
+            )
 
             sources = []
             for res in raw_results:

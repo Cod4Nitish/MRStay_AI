@@ -8,10 +8,29 @@ class DocumentLoader:
     """
     Loads documents from the filesystem.
     Supports .txt, .md and .pdf files.
+
+    Tags each document with a "property" metadata field derived
+    from its immediate parent folder under properties/ — this is
+    what lets the retriever later restrict search to a single
+    property instead of mixing content across properties.
     """
 
     def __init__(self, directory_path: str):
         self.directory_path = Path(directory_path)
+
+    def _extract_property_name(self, file_path: Path) -> str:
+        """
+        For a file at .../properties/7th_avenue_gaur_city/faq.txt
+        returns "7th_avenue_gaur_city". For files outside a
+        properties/ subfolder, returns "general".
+        """
+
+        parts = file_path.relative_to(self.directory_path).parts
+
+        if len(parts) >= 2 and parts[0] == "properties":
+            return parts[1]
+
+        return "general"
 
     def load_documents(self) -> List[Dict[str, Any]]:
         """
@@ -52,7 +71,10 @@ class DocumentLoader:
                                         self.directory_path
                                     )
                                 ),
-                                "filename": file
+                                "filename": file,
+                                "property": self._extract_property_name(
+                                    file_path
+                                )
                             }
                         })
 

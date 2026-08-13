@@ -32,6 +32,12 @@ class Embeddings:
         self.retry_delay = retry_delay
 
         self.use_cache = use_cache
+
+        self.embedding_provider = os.getenv(
+            "EMBEDDING_PROVIDER",
+            "gemini"
+        ).lower().strip()
+
         self._cache: Dict[str, List[float]] = {}
 
         self.stats = {
@@ -42,8 +48,15 @@ class Embeddings:
             "failures": 0
         }
 
+        if self.embedding_provider not in ("local", "gemini"):
+            raise ValueError(
+                f"Unsupported EMBEDDING_PROVIDER: {self.embedding_provider}. "
+                "Use 'local' or 'gemini'."
+            )
+
         self.use_gemini = (
-            self.api_key is not None
+            self.embedding_provider == "gemini"
+            and self.api_key is not None
             and self.api_key != ""
             and self.api_key != "your_gemini_api_key_here"
         )
@@ -158,7 +171,11 @@ class Embeddings:
             try:
 
                 if self.use_gemini:
-                    vectors = self._gemini_embed_batch(pending_texts)
+                    vectors = []
+                    batch_size = 100
+                    for i in range(0, len(pending_texts), batch_size):
+                        batch = pending_texts[i:i + batch_size]
+                        vectors.extend(self._gemini_embed_batch(batch))
 
                 else:
                     vectors = self.local_model.encode(

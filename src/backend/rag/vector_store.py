@@ -86,8 +86,8 @@ class VectorStore:
             metadata = chunk.get("metadata", {})
 
             source = metadata.get(
-                 "filename",
-            metadata.get("source", "unknown")
+                 "source",
+            metadata.get("filename", "unknown")
         )
 
             chunk_index = metadata.get(
@@ -151,19 +151,26 @@ class VectorStore:
     def similarity_search(
         self,
         query_embedding: List[float],
-        n_results: int = 5
+        n_results: int = 5,
+        where: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
 
         logger.info(
             f"Searching Top {n_results} Documents"
+            + (f" (filter: {where})" if where else "")
         )
 
         try:
 
-            results = self.collection.query(
-                query_embeddings=[query_embedding],
-                n_results=n_results
-            )
+            query_kwargs = {
+                "query_embeddings": [query_embedding],
+                "n_results": n_results
+            }
+
+            if where:
+                query_kwargs["where"] = where
+
+            results = self.collection.query(**query_kwargs)
 
             formatted_results = []
 

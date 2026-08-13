@@ -46,7 +46,8 @@ class Retriever:
         self,
         query: str,
         top_k: int = 5,
-        min_score: float = None
+        min_score: float = None,
+        property_filter: str = None
     ) -> List[Dict[str, Any]]:
         """
         Takes a raw text query and returns relevant document chunks.
@@ -64,9 +65,16 @@ class Retriever:
 
             query_vector = self.embeddings.embed_query(query)
 
+            where_clause = (
+                {"property": property_filter}
+                if property_filter
+                else None
+            )
+
             results = self.vector_store.similarity_search(
                 query_vector,
-                n_results=top_k
+                n_results=top_k,
+                where=where_clause
             )
 
             if min_score is not None:
