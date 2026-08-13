@@ -34,11 +34,6 @@ class PropertyAgent(BaseAgent):
         )
 
     def _discover_properties(self) -> list:
-        """
-        Scans documents/properties/ once at startup and returns
-        the list of property folder names (e.g.
-        ["7th_avenue_gaur_city", "gaur_aero_heights"]).
-        """
 
         properties_dir = os.path.join(DOCUMENTS_PATH, "properties")
 
@@ -52,13 +47,17 @@ class PropertyAgent(BaseAgent):
 
     def _detect_property(self, message: str) -> Optional[str]:
         """
-        Simple, dependency-free match: normalizes the folder name
-        (underscores -> spaces) and checks if enough of its words
-        appear in the message. Good enough for exact-name mentions
-        like "7th Avenue" or "Gaur Aero Heights".
+        Picks the property whose name has the highest word-overlap
+        ratio with the message, as long as at least half its
+        significant words are present. This avoids false positives
+        from a single generic shared word (e.g. "city") while still
+        matching partial mentions like "7th Avenue" for
+        "7th_avenue_gaur_city".
         """
 
         lowered = message.lower()
+        best_match = None
+        best_ratio = 0.0
 
         for property_name in self.known_properties:
 
@@ -69,14 +68,18 @@ class PropertyAgent(BaseAgent):
                 continue
 
             matched = sum(1 for w in words if w in lowered)
+            ratio = matched / len(words)
 
-            # Require most of the significant words to match, so a
-            # single generic word ("city", "heights") alone doesn't
-            # falsely trigger a match.
-            if matched >= max(1, len(words) - 1):
-                return property_name
+            if ratio >= 0.5 and ratio > best_ratio:
+                best_ratio = ratio
+                best_match = property_name
 
-        return None
+        logger.info(
+            f"Property detection for '{message[:50]}' -> "
+            f"{best_match} (ratio: {best_ratio})"
+        )
+
+        return best_match
 
     def handle(
         self,
