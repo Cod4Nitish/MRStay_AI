@@ -9,9 +9,7 @@ from src.ai.agents.lead_qualification_agent import LeadQualificationAgent
 from src.ai.agents.followup_agent import FollowUpAgent
 from src.ai.agents.sales_manager_agent import SalesManagerAgent
 from src.ai.agents.base_agent import new_session_id, BaseAgent
-
-from src.ai.agents.followup_agent import FollowUpAgent
-from src.ai.agents.sales_manager_agent import SalesManagerAgent
+from src.ai.memory.session_store import session_store
 
 logger = logging.getLogger(__name__)
 
@@ -23,25 +21,25 @@ class AgentOrchestrator:
     Agent Orchestrator (the "brain")
 
     Flow:
-        message -> intent detection -> route to registered
-        agent -> structured response
+        message -> (session context) -> intent detection ->
+        route to registered agent -> structured response
 
     Design principles:
         - Adding a new agent later = one new class + one
           registry entry. This file's core logic never changes.
-        - If any single agent fails to initialize (e.g. an
-          external API is down), the whole system does NOT
-          crash — that agent is simply unavailable and routes
-          fall back to reception_agent.
+        - If any single agent fails to initialize, the whole
+          system does NOT crash — that agent is simply
+          unavailable and routes fall back to reception_agent.
         - Every response has a consistent, frontend-friendly
           shape regardless of which agent handled it.
+        - Session continuity: the last intent per session is
+          tracked in the shared session_store, so a short
+          follow-up message (a budget figure, a phone number)
+          stays routed to the same agent instead of being
+          reclassified from scratch each turn.
     ==========================================================
     """
 
-    # intent -> registry key. Agents not yet built (lead_agent,
-    # sales_manager_agent, etc.) intentionally point to
-    # reception_agent for now — swap the value here later,
-    # nothing else needs to change.
     INTENT_TO_AGENT = {
         "property_query": "property_agent",
         "greeting": "reception_agent",
@@ -80,12 +78,6 @@ class AgentOrchestrator:
     # ======================================================
 
     def _register_agents(self):
-        """
-        Each agent is initialized independently. If one fails
-        (e.g. RAG engine can't reach ChromaDB, or an API key is
-        missing), we log it and continue — the rest of the
-        system stays usable.
-        """
 
         agent_classes = {
             "reception_agent": ReceptionAgent,
@@ -123,10 +115,6 @@ class AgentOrchestrator:
         message: str,
         session_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """
-        Main entrypoint. Detects intent, picks the right agent,
-        executes it safely, and returns a structured response.
-        """
 
         self.stats["total_requests"] += 1
         start = time.time()
@@ -145,12 +133,19 @@ class AgentOrchestrator:
                 sources=[]
             )
 
-        # 1. Detect intent (already has its own internal fallback)
-        intent_result = self.intent_detector.detect(message)
+        # 1. Pull prior session context (just the last intent, for now)
+        session_data = session_store.get(session_id)
+        session_context = {"last_intent": session_data.get("_last_intent")}
+
+        # 2. Detect intent, aware of session continuity
+        intent_result = self.intent_detector.detect(message, session_context)
         intent = intent_result["intent"]
         confidence = intent_result["confidence"]
 
-        # 2. Resolve agent — fall back if mapped agent isn't registered
+        # 3. Persist this turn's intent for the next call
+        session_store.update(session_id, {"_last_intent": intent})
+
+        # 4. Resolve agent — fall back if mapped agent isn't registered
         agent_key = self.INTENT_TO_AGENT.get(intent, self.FALLBACK_AGENT_KEY)
 
         if agent_key not in self.agents:
@@ -163,7 +158,7 @@ class AgentOrchestrator:
 
         agent = self.agents[agent_key]
 
-        # 3. Execute safely (agent.safe_handle never raises)
+        # 5. Execute safely (agent.safe_handle never raises)
         result = agent.safe_handle(
             message,
             context={"session_id": session_id}

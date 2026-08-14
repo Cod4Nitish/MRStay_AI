@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Any, Dict, Optional
 
 from src.ai.llm.gemini_client import GeminiClient
@@ -9,11 +10,6 @@ logger = logging.getLogger(__name__)
 # ==============================================================
 # Supported Intents
 # ==============================================================
-# Every value the classifier is allowed to return. Keeping this
-# as a single source of truth so the orchestrator can validate
-# against it too.
-# ==============================================================
-
 INTENT_CATEGORIES = {
     "property_query": (
         "Questions about a specific property — configurations, "
@@ -41,24 +37,27 @@ INTENT_CATEGORIES = {
 
 DEFAULT_INTENT = "general_faq"
 
-# Lightweight keyword map used ONLY as a fallback when the LLM
-# call fails — keeps the system degraded-but-functional instead
-# of hard down.
 _FALLBACK_KEYWORDS = {
     "greeting": ["hi", "hello", "hey", "namaste", "thanks", "thank you", "bye"],
     "lead_capture": ["call me", "site visit", "my number", "contact me", "callback"],
     "human_handoff": ["talk to human", "agent please", "complaint", "not happy", "legal"],
 }
 
-# Pure greeting phrases — used for the instant rule-based fast
-# path below, BEFORE any LLM call is made. Kept deliberately
-# narrow (short messages only) so a real question never gets
-# misclassified as a greeting.
 _GREETING_ONLY_PHRASES = {
     "hi", "hii", "hiii", "hello", "hey", "hola", "yo",
     "good morning", "good afternoon", "good evening",
     "namaste", "namaskar"
 }
+
+# Patterns that suggest a message is a short follow-up answer
+# (budget figure, phone number, a bare name) rather than a new
+# topic — used only to decide whether to keep a lead_capture
+# conversation going, never to force lead_capture from scratch.
+_BUDGET_PATTERN = re.compile(
+    r"\b\d+(\.\d+)?\s*(lakh|lac|crore|cr|k|thousand)\b|₹\s*\d+", re.IGNORECASE
+)
+_PHONE_PATTERN = re.compile(r"\b\d{10}\b|\+?\d{2,3}[\s-]?\d{10}\b")
+_SHORT_ANSWER_WORD_LIMIT = 6
 
 
 class IntentDetector:
@@ -71,11 +70,15 @@ class IntentDetector:
     fixed INTENT_CATEGORIES so the Agent Orchestrator can route
     it to the correct downstream agent.
 
-    Performance: pure greetings are classified instantly via a
-    rule-based check, with NO Gemini call — this removes an
-    unnecessary LLM round-trip from the fastest, most common
-    conversation path. Every other message still goes through
-    the full LLM classifier for accuracy.
+    Session-aware continuity: if the caller passes
+    session_context (with the previous turn's intent), a short
+    follow-up message that looks like a budget figure, phone
+    number, or bare short answer is kept on "lead_capture"
+    instead of being reclassified as something else — this is
+    what lets a real multi-turn lead conversation ("I want a
+    site visit" -> "90 lakh" -> "9876543210") stay coherent
+    without needing full conversation history sent to the LLM
+    every time.
     ==========================================================
     """
 
@@ -86,6 +89,7 @@ class IntentDetector:
         self.stats = {
             "total_requests": 0,
             "rule_based_hits": 0,
+            "context_overrides": 0,
             "llm_successes": 0,
             "fallback_used": 0,
             "invalid_intent_corrected": 0
@@ -101,11 +105,6 @@ class IntentDetector:
     # ======================================================
 
     def _is_pure_greeting(self, message: str) -> bool:
-        """
-        True only when the message is JUST a greeting — short,
-        with no other content. "hi" -> True. "hi, price kya hai?"
-        -> False (still goes to the LLM below).
-        """
 
         cleaned = message.strip().lower().strip("!.,? ")
 
@@ -118,6 +117,35 @@ class IntentDetector:
         words = cleaned.split()
 
         if len(words) <= 3 and set(words) & _GREETING_ONLY_PHRASES:
+            return True
+
+        return False
+
+    # ======================================================
+    # Context Continuity Check
+    # ======================================================
+
+    def _looks_like_lead_followup(self, message: str) -> bool:
+        """
+        True for short messages that plausibly answer a lead
+        qualification question — a budget figure, a phone number,
+        or just a short bare answer (like a name). Deliberately
+        loose since this only APPLIES when the previous turn was
+        already lead_capture — it never triggers lead_capture on
+        its own.
+        """
+
+        stripped = message.strip()
+
+        if _BUDGET_PATTERN.search(stripped):
+            return True
+
+        if _PHONE_PATTERN.search(stripped):
+            return True
+
+        word_count = len(stripped.split())
+
+        if 0 < word_count <= _SHORT_ANSWER_WORD_LIMIT:
             return True
 
         return False
@@ -172,14 +200,26 @@ class IntentDetector:
     # Public API
     # ======================================================
 
-    def detect(self, message: str) -> Dict[str, Any]:
+    def detect(
+        self,
+        message: str,
+        session_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
+        session_context (optional): {"last_intent": "lead_capture"}
+        When the previous turn's intent was lead_capture and this
+        message looks like a short follow-up answer, the intent
+        stays lead_capture regardless of what the LLM/fast-path
+        would otherwise say — this keeps a lead conversation from
+        derailing on messages like "90 lakh" or a bare phone number.
+
         Returns:
             {
                 "intent": "property_query",
                 "confidence": "high",
                 "method": "rule_based" | "llm" |
-                           "fallback_keyword" | "fallback_default"
+                           "fallback_keyword" | "fallback_default" |
+                           "context_override"
             }
         """
 
@@ -190,6 +230,19 @@ class IntentDetector:
                 "intent": DEFAULT_INTENT,
                 "confidence": "low",
                 "method": "empty_input"
+            }
+
+        # --- Context override: continue an active lead conversation ---
+        last_intent = (session_context or {}).get("last_intent")
+
+        if last_intent == "lead_capture" and self._looks_like_lead_followup(message):
+
+            self.stats["context_overrides"] += 1
+
+            return {
+                "intent": "lead_capture",
+                "confidence": "high",
+                "method": "context_override"
             }
 
         # --- Fast path: skip Gemini entirely for pure greetings ---
