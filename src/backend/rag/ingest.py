@@ -146,4 +146,4 @@ def statistics() -> Dict[str, Any]:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     result = ingest_documents()
-    print(result)
+    print(result) 

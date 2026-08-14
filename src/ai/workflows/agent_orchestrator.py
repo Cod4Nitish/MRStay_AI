@@ -5,7 +5,13 @@ from typing import Any, Dict, Optional
 from src.ai.agents.intent_detection import IntentDetector
 from src.ai.agents.reception_agent import ReceptionAgent
 from src.ai.agents.property_agent import PropertyAgent
+from src.ai.agents.lead_qualification_agent import LeadQualificationAgent
+from src.ai.agents.followup_agent import FollowUpAgent
+from src.ai.agents.sales_manager_agent import SalesManagerAgent
 from src.ai.agents.base_agent import new_session_id, BaseAgent
+
+from src.ai.agents.followup_agent import FollowUpAgent
+from src.ai.agents.sales_manager_agent import SalesManagerAgent
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +46,8 @@ class AgentOrchestrator:
         "property_query": "property_agent",
         "greeting": "reception_agent",
         "general_faq": "reception_agent",
-        "lead_capture": "reception_agent",     # TODO: lead_qualification_agent
-        "human_handoff": "reception_agent",    # TODO: sales_manager_agent
+        "lead_capture": "lead_qualification_agent",
+        "human_handoff": "sales_manager_agent",
     }
 
     FALLBACK_AGENT_KEY = "reception_agent"
@@ -84,6 +90,9 @@ class AgentOrchestrator:
         agent_classes = {
             "reception_agent": ReceptionAgent,
             "property_agent": PropertyAgent,
+            "lead_qualification_agent": LeadQualificationAgent,
+            "followup_agent": FollowUpAgent,
+            "sales_manager_agent": SalesManagerAgent,
         }
 
         for key, agent_class in agent_classes.items():
