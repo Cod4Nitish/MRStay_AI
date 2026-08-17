@@ -131,12 +131,12 @@ print(f"Version     : {VERSION}")
 
 print(
     "Gemini Key  :",
-    "Loaded ✅" if GEMINI_API_KEY else "Missing ❌"
+    "Loaded [OK]" if GEMINI_API_KEY else "Missing [MISSING]"
 )
 
 print(
     "Database    :",
-    "Configured ✅" if DATABASE_URL else "Not Configured ⚠️"
+    "Configured [OK]" if DATABASE_URL else "Not Configured [WARN]"
 )
 
 print(f"ChromaDB    : {CHROMA_DB_PATH}")

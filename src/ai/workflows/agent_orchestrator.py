@@ -133,8 +133,8 @@ class AgentOrchestrator:
                 sources=[]
             )
 
-        # 1. Pull prior session context (just the last intent, for now)
-        session_data = session_store.get(session_id)
+        # 1. Pull prior session context (last intent + last property)
+        session_data = session_store.get(session_id) or {}
         session_context = {"last_intent": session_data.get("_last_intent")}
 
         # 2. Detect intent, aware of session continuity
@@ -161,8 +161,18 @@ class AgentOrchestrator:
         # 5. Execute safely (agent.safe_handle never raises)
         result = agent.safe_handle(
             message,
-            context={"session_id": session_id}
+            context={
+                "session_id": session_id,
+                "last_property": session_data.get("last_property")
+            }
         )
+
+        # 6. If property_agent detected a property, remember it
+        #    for the next turn (so "its price?" style follow-ups work)
+        if agent_key == "property_agent":
+            detected_property = result.get("metadata", {}).get("property_filter")
+            if detected_property:
+                session_store.update(session_id, {"last_property": detected_property})
 
         if not result["success"]:
             self.stats["total_failures"] += 1
@@ -177,7 +187,6 @@ class AgentOrchestrator:
             start_time=start,
             sources=result.get("sources", [])
         )
-
     # ======================================================
     # Response Builder
     # ======================================================

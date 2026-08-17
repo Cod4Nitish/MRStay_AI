@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MRStay AI — Chat Widget Demo</title>
+    <link rel="stylesheet" href="css/chat.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #eef1f6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mrstay-widget">
+        <div class="mrstay-header">
+            <h1 id="mrstay-brand-name">MRStay AI</h1>
+            <p id="mrstay-tagline">Your Property Assistant</p>
+        </div>
+
+        <div class="mrstay-messages" id="mrstay-message-list">
+            <div class="mrstay-typing" id="mrstay-typing">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="mrstay-input-bar">
+            <input
+                type="text"
+                id="mrstay-input"
+                placeholder="Ask about this property..."
+                autocomplete="off"
+            >
+            <button id="mrstay-send-btn">➤</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

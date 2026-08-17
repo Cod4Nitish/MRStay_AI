@@ -87,7 +87,18 @@ class PropertyAgent(BaseAgent):
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
 
+        context = context or {}
         property_filter = self._detect_property(message)
+
+        # agar current message mein property-name nahi mila,
+        # last mentioned property (session context se) use karo
+        if not property_filter:
+            property_filter = context.get("last_property")
+            if property_filter:
+                logger.info(
+                    f"No property in message — falling back to "
+                    f"last mentioned: {property_filter}"
+                )
 
         if property_filter:
             logger.info(

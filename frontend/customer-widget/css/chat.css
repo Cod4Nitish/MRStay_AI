@@ -1,0 +1,154 @@
+/* ==========================================================
+   MRStay AI — Widget Styles
+   Self-contained (no external dependencies) so this can be
+   dropped into any customer website without style conflicts.
+   ========================================================== */
+
+.mrstay-widget {
+    display: flex;
+    flex-direction: column;
+    width: 380px;
+    height: 560px;
+    max-width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #ffffff;
+}
+
+.mrstay-header {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mrstay-header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.mrstay-header p {
+    font-size: 12px;
+    opacity: 0.85;
+    margin: 0;
+}
+
+.mrstay-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f9fafb;
+}
+
+.mrstay-message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.mrstay-message--assistant {
+    align-self: flex-start;
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+}
+
+.mrstay-message--user {
+    align-self: flex-end;
+    background: #4f46e5;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.mrstay-typing {
+    display: none;
+    align-self: flex-start;
+    padding: 10px 14px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    gap: 4px;
+}
+
+.mrstay-typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #9ca3af;
+    animation: mrstay-bounce 1.2s infinite;
+}
+
+.mrstay-typing span:nth-child(2) { animation-delay: 0.2s; }
+.mrstay-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes mrstay-bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-4px); }
+}
+
+.mrstay-input-bar {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+}
+
+.mrstay-input-bar input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 14px;
+    outline: none;
+}
+
+.mrstay-input-bar input:focus {
+    border-color: #4f46e5;
+}
+
+.mrstay-input-bar button {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.mrstay-input-bar button:disabled {
+    background: #a5b4fc;
+    cursor: not-allowed;
+}
+
+/* ==========================================================
+   Mobile Responsiveness
+   ========================================================== */
+@media (max-width: 768px) {
+    .mrstay-widget {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        max-width: 100vw;
+        border-radius: 0;
+        z-index: 999999;
+    }
+}
