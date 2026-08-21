@@ -1,0 +1,239 @@
+import logging
+import time
+from typing import Any, Dict, Optional
+
+from src.ai.agents.intent_detection import IntentDetector
+from src.ai.agents.reception_agent import ReceptionAgent
+from src.ai.agents.property_agent import PropertyAgent
+from src.ai.agents.lead_qualification_agent import LeadQualificationAgent
+from src.ai.agents.followup_agent import FollowUpAgent
+from src.ai.agents.sales_manager_agent import SalesManagerAgent
+from src.ai.agents.base_agent import new_session_id, BaseAgent
+from src.ai.memory.session_store import session_store
+
+logger = logging.getLogger(__name__)
+
+
+class AgentOrchestrator:
+    """
+    ==========================================================
+    MRStay AI
+    Agent Orchestrator (the "brain")
+
+    Flow:
+        message -> (session context) -> intent detection ->
+        route to registered agent -> structured response
+
+    Design principles:
+        - Adding a new agent later = one new class + one
+          registry entry. This file's core logic never changes.
+        - If any single agent fails to initialize, the whole
+          system does NOT crash — that agent is simply
+          unavailable and routes fall back to reception_agent.
+        - Every response has a consistent, frontend-friendly
+          shape regardless of which agent handled it.
+        - Session continuity: the last intent per session is
+          tracked in the shared session_store, so a short
+          follow-up message (a budget figure, a phone number)
+          stays routed to the same agent instead of being
+          reclassified from scratch each turn.
+    ==========================================================
+    """
+
+    INTENT_TO_AGENT = {
+        "property_query": "property_agent",
+        "greeting": "reception_agent",
+        "general_faq": "reception_agent",
+        "lead_capture": "lead_qualification_agent",
+        "human_handoff": "sales_manager_agent",
+    }
+
+    FALLBACK_AGENT_KEY = "reception_agent"
+
+    def __init__(self):
+
+        self.intent_detector = IntentDetector()
+        self.agents: Dict[str, BaseAgent] = {}
+
+        self.stats = {
+            "total_requests": 0,
+            "total_failures": 0,
+            "agent_init_failures": []
+        }
+
+        self._register_agents()
+
+        logger.info("=" * 60)
+        logger.info("Agent Orchestrator initialized")
+        logger.info(f"Registered agents: {list(self.agents.keys())}")
+        if self.stats["agent_init_failures"]:
+            logger.warning(
+                f"Agents that failed to initialize: "
+                f"{self.stats['agent_init_failures']}"
+            )
+        logger.info("=" * 60)
+
+    # ======================================================
+    # Agent Registration
+    # ======================================================
+
+    def _register_agents(self):
+
+        agent_classes = {
+            "reception_agent": ReceptionAgent,
+            "property_agent": PropertyAgent,
+            "lead_qualification_agent": LeadQualificationAgent,
+            "followup_agent": FollowUpAgent,
+            "sales_manager_agent": SalesManagerAgent,
+        }
+
+        for key, agent_class in agent_classes.items():
+
+            try:
+                self.agents[key] = agent_class()
+                logger.info(f"Agent '{key}' initialized successfully.")
+
+            except Exception as e:
+                logger.exception(
+                    f"Failed to initialize agent '{key}': {e}"
+                )
+                self.stats["agent_init_failures"].append(key)
+
+        if self.FALLBACK_AGENT_KEY not in self.agents:
+            raise RuntimeError(
+                f"Critical: fallback agent "
+                f"'{self.FALLBACK_AGENT_KEY}' failed to initialize. "
+                "Orchestrator cannot start safely."
+            )
+
+    # ======================================================
+    # Routing
+    # ======================================================
+
+    def route(
+        self,
+        message: str,
+        session_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+
+        self.stats["total_requests"] += 1
+        start = time.time()
+
+        session_id = session_id or new_session_id()
+
+        if not message or not message.strip():
+            return self._build_response(
+                success=False,
+                response_text="Please type a message.",
+                intent=None,
+                confidence=None,
+                agent_used=None,
+                session_id=session_id,
+                start_time=start,
+                sources=[]
+            )
+
+        # 1. Pull prior session context (last intent + last property)
+        session_data = session_store.get(session_id) or {}
+        session_context = {"last_intent": session_data.get("_last_intent")}
+
+        # 2. Detect intent, aware of session continuity
+        intent_result = self.intent_detector.detect(message, session_context)
+        intent = intent_result["intent"]
+        confidence = intent_result["confidence"]
+
+        # 3. Persist this turn's intent for the next call
+        session_store.update(session_id, {"_last_intent": intent})
+
+        # 4. Resolve agent — fall back if mapped agent isn't registered
+        agent_key = self.INTENT_TO_AGENT.get(intent, self.FALLBACK_AGENT_KEY)
+
+        if agent_key not in self.agents:
+            logger.warning(
+                f"Agent '{agent_key}' not available "
+                f"(init failed or not registered) — "
+                f"falling back to '{self.FALLBACK_AGENT_KEY}'."
+            )
+            agent_key = self.FALLBACK_AGENT_KEY
+
+        agent = self.agents[agent_key]
+
+        # 5. Execute safely (agent.safe_handle never raises)
+        result = agent.safe_handle(
+            message,
+            context={
+                "session_id": session_id,
+                "last_property": session_data.get("last_property")
+            }
+        )
+
+        # 6. If property_agent detected a property, remember it
+        #    for the next turn (so "its price?" style follow-ups work)
+        if agent_key == "property_agent":
+            detected_property = result.get("metadata", {}).get("property_filter")
+            if detected_property:
+                session_store.update(session_id, {"last_property": detected_property})
+
+        if not result["success"]:
+            self.stats["total_failures"] += 1
+
+        return self._build_response(
+            success=result["success"],
+            response_text=result["response"],
+            intent=intent,
+            confidence=confidence,
+            agent_used=agent_key,
+            session_id=session_id,
+            start_time=start,
+            sources=result.get("sources", [])
+        )
+    # ======================================================
+    # Response Builder
+    # ======================================================
+
+    def _build_response(
+        self,
+        success: bool,
+        response_text: str,
+        intent: Optional[str],
+        confidence: Optional[str],
+        agent_used: Optional[str],
+        session_id: str,
+        start_time: float,
+        sources: list
+    ) -> Dict[str, Any]:
+
+        return {
+            "success": success,
+            "response": response_text,
+            "intent": intent,
+            "confidence": confidence,
+            "agent_used": agent_used,
+            "session_id": session_id,
+            "latency_ms": round((time.time() - start_time) * 1000),
+            "sources": sources
+        }
+
+    # ======================================================
+    # Health Check
+    # ======================================================
+
+    def health(self) -> Dict[str, Any]:
+
+        return {
+            "success": self.FALLBACK_AGENT_KEY in self.agents,
+            "registered_agents": list(self.agents.keys()),
+            "failed_agents": self.stats["agent_init_failures"],
+            "intent_map": self.INTENT_TO_AGENT
+        }
+
+    # ======================================================
+    # Statistics
+    # ======================================================
+
+    def statistics(self) -> Dict[str, Any]:
+
+        return {
+            **self.stats,
+            "agents": list(self.agents.keys())
+        }

@@ -1,0 +1,26 @@
+﻿FAQs - 7th Avenue - Gaur City
+
+Q: What configurations are available at 7th Avenue - Gaur City?
+A: 2 BHK and 3 BHK apartments, with super areas ranging roughly from 1075 to 1450 sq.ft.
+
+Q: What is the possession status?
+A: The project is Ready to Move, with possession having started in March 2023.
+
+Q: What is the RERA number for this project?
+A: UPRERAPRJ6695.
+
+Q: What amenities are included?
+A: Swimming pool, gymnasium, clubhouse, kids' play area, a large sports complex, jogging
+track, and more. See amenities.txt for the full list.
+
+Q: What is the starting price?
+A: Starting from approximately Rs. 88.50 Lakh (subject to change - verify current pricing
+with the sales team).
+
+Q: Is the project earthquake-resistant?
+A: Yes, the buildings are designed to be earthquake-resistant.
+
+Q: What is nearby the project?
+A: Greater Noida West Road, Gaur City Mall, Gaurs International School, and Sector 52
+Noida Metro Station are all within a short distance. See location_connectivity.txt for
+details.

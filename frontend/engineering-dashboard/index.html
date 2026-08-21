@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MRStay AI Engineering Control Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=2">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  
+  <!-- LOGIN OVERLAY -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-container">
+      <div class="login-header">
+        <div class="login-logo">M</div>
+        <h1 class="login-title">MRStay Engineering Control Center</h1>
+        <p class="login-subtitle">Sign in to access the Enterprise Dashboard</p>
+      </div>
+      <div class="login-card">
+        <form id="loginForm">
+          <div id="loginError" class="login-error"></div>
+          <div class="form-group">
+            <label class="form-label" for="loginUsername">Username</label>
+            <input type="text" id="loginUsername" class="form-input" placeholder="Enter your username" autocomplete="username" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="login-btn">
+            <i data-lucide="log-in" style="width:18px;height:18px;"></i>
+            Sign In
+          </button>
+        </form>
+      </div>
+      <div class="login-footer">
+        MRStay AI Engineering &copy; 2026
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="dashboard-layout" style="display:none;">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <i data-lucide="cpu" style="width:20px;height:20px;"></i>
+          </div>
+          <div class="logo-text">
+            <span>MRStay</span>
+            <span style="font-weight:400;font-size:0.85rem;color:var(--text-muted);">Control Center</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- 16 Modualr Sections -->
+        <a href="#overview" class="nav-item active" data-page="overview">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Executive Overview</span>
+        </a>
+        <a href="#sprint" class="nav-item" data-page="sprint">
+          <i data-lucide="map"></i>
+          <span>Sprint Roadmap</span>
+        </a>
+        <a href="#focus" class="nav-item" data-page="focus">
+          <i data-lucide="target"></i>
+          <span>Current Focus</span>
+        </a>
+        <a href="#kanban" class="nav-item" data-page="kanban">
+          <i data-lucide="kanban"></i>
+          <span>Kanban Board</span>
+        </a>
+        
+        <div class="nav-divider"></div>
+        <div class="nav-section-title">Engineering</div>
+        
+        <a href="#backend" class="nav-item" data-page="backend">
+          <i data-lucide="server"></i>
+          <span>Backend Health</span>
+        </a>
+        <a href="#console" class="nav-item" data-page="console">
+          <i data-lucide="terminal"></i>
+          <span>Developer Console</span>
+        </a>
+        <a href="#testing" class="nav-item" data-page="testing">
+          <i data-lucide="test-tube"></i>
+          <span>Testing</span>
+        </a>
+        <a href="#git" class="nav-item" data-page="git">
+          <i data-lucide="git-branch"></i>
+          <span>Git Activity</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section-title">AI Pipeline</div>
+        
+        <a href="#ai_modules" class="nav-item" data-page="ai_modules">
+          <i data-lucide="bot"></i>
+          <span>AI Modules</span>
+        </a>
+        <a href="#rag" class="nav-item" data-page="rag">
+          <i data-lucide="brain-circuit"></i>
+          <span>RAG Pipeline</span>
+        </a>
+        <a href="#knowledge" class="nav-item" data-page="knowledge">
+          <i data-lucide="database"></i>
+          <span>Knowledge Base</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section-title">Resources</div>
+        
+        <a href="#business_docs" class="nav-item" data-page="business_docs">
+          <i data-lucide="briefcase"></i>
+          <span>Business Documents</span>
+        </a>
+        <a href="#docs" class="nav-item" data-page="docs">
+          <i data-lucide="file-text"></i>
+          <span>Documentation</span>
+        </a>
+        <a href="#analytics" class="nav-item" data-page="analytics">
+          <i data-lucide="bar-chart-2"></i>
+          <span>Analytics</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section-title">System</div>
+
+        <a href="#activity" class="nav-item" data-page="activity">
+          <i data-lucide="activity"></i>
+          <span>Recent Activity</span>
+        </a>
+        <a href="#notifications" class="nav-item" data-page="notifications">
+          <i data-lucide="bell"></i>
+          <span>Notifications</span>
+        </a>
+        <a href="#settings" class="nav-item" data-page="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-avatar" id="userAvatar">AD</div>
+        <div class="sidebar-footer-info">
+          <span class="sidebar-user-name" id="userDisplayName">Admin</span>
+          <span class="sidebar-user-role" id="userDisplayRole">Administrator</span>
+        </div>
+        <button class="logout-btn" id="logoutBtn" title="Logout">
+          <i data-lucide="log-out" style="width:14px;height:14px;"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- TOP NAV -->
+      <header class="top-nav">
+        <div class="nav-left">
+          <button class="hamburger-btn" id="hamburgerBtn">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="nav-title">
+            <span class="nav-breadcrumb" id="navBreadcrumb">Executive Overview</span>
+          </div>
+        </div>
+        <div class="nav-right">
+          <div class="nav-date" id="navDate">Loading date...</div>
+          <button class="icon-btn">
+            <i data-lucide="bell"></i>
+            <span class="notification-dot"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- DYNAMIC APP ROOT -->
+      <div id="app-root" class="page-content">
+        <!-- JS Page modules will render here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- AI CHAT WIDGET -->
+  <div class="ai-chat-widget" id="ai-chat-widget">
+    <div class="ai-chat-panel" id="ai-chat-panel">
+      <div class="ai-chat-header">
+        <span>
+    <i data-lucide="bot" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;"></i>
+    MRStay Engineering AI
+    <span id="ai-chat-status-dot" class="ai-status-dot"></span>
+</span>
+<button id="ai-chat-clear" title="Clear chat" style="background:none;border:none;color:white;cursor:pointer;margin-right:8px;">
+    <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+</button>
+        <button id="ai-chat-close" style="background:none;border:none;color:white;cursor:pointer;"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="ai-chat-messages" id="ai-chat-messages">
+        <div class="chat-message ai-message">
+          <div class="message-content">Hello! I am your engineering operations assistant. How can I help you?</div>
+        </div>
+      </div>
+      <div class="ai-chat-input-area">
+        <textarea id="ai-chat-input" rows="1" placeholder="Ask about tasks, servers, RAG..."></textarea>
+        <button id="ai-chat-send"><i data-lucide="send" style="width:16px;height:16px;"></i></button>
+      </div>
+    </div>
+    <button class="ai-chat-toggle" id="ai-chat-toggle">
+      <i data-lucide="bot"></i>
+    </button>
+  </div>
+
+  <!-- JS modules -->
+  <script src="js/db.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/data/sprint.js"></script>
+  <script src="js/api.js"></script>
+  
+  <script src="js/pages/pages_core.js"></script>
+  <script src="js/pages/pages_ai.js"></script>
+  <script src="js/pages/pages_system.js"></script>
+  <script src="js/ai-chat.js?v=3"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
