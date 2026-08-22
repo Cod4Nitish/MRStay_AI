@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id           String        @id @default(uuid())
+  name         String
+  slug         String        @unique
+  status       String        @default("active")
+  createdAt    DateTime      @default(now())
+
+  users        User[]
+  apiKeys      ApiKey[]
+  widgets      Widget[]
+  leads        Lead[]
+  subscription Subscription?
+  usage        Usage[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  keyHash   String    @unique
+  keyPrefix String
+  type      String
+  revoked   Boolean   @default(false)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([tenantId])
+}
+
+model Widget {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  domain    String
+  theme     Json?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  tenantId  String
+  sessionId String
+  startedAt DateTime  @default(now())
+  messages  Message[]
+  lead      Lead?
+
+  @@index([tenantId])
+  @@index([sessionId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  role           String
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model Lead {
+  id             String        @id @default(uuid())
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id])
+  conversationId String?       @unique
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  name           String?
+  phone          String?
+  budget         String?
+  requirement    String?
+  score          Int?          @default(0)
+  status         String        @default("new")
+  createdAt      DateTime      @default(now())
+
+  @@index([tenantId])
+}
+
+model Subscription {
+  id        String    @id @default(uuid())
+  tenantId  String    @unique
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  plan      String
+  status    String    @default("active")
+  renewsAt  DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Usage {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  metric      String
+  count       Int      @default(0)
+  periodStart DateTime
+  periodEnd   DateTime
+
+  @@index([tenantId, metric, periodStart])
+}
