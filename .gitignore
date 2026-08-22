@@ -25,3 +25,5 @@ src/rag/embeddings/*
 
 # ChromaDB
 src/backend/data/chroma_db/
+
+/src/generated/prisma

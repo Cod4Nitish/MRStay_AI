@@ -2,44 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MRStay AI — Chat Widget Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MRStay AI — Premium Property Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/chat.css">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: #eef1f6;
-        }
-    </style>
 </head>
 <body>
 
-    <div class="mrstay-widget">
+    <div class="mrstay-widget" role="main" aria-label="MRStay AI Property Assistant">
+        
+        <!-- Header -->
         <div class="mrstay-header">
-            <h1 id="mrstay-brand-name">MRStay AI</h1>
-            <p id="mrstay-tagline">Your Property Assistant</p>
-        </div>
+            <div class="mrstay-header-left">
+                <h1 class="mrstay-brand-name" id="mrstay-brand-name">MRStay AI</h1>
+                <p class="mrstay-tagline" id="mrstay-tagline">Property Assistant</p>
+            </div>
+            
+            <div class="mrstay-header-center">
+                <div class="mrstay-context-chip" id="mrstay-context-chip" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span id="mrstay-context-text">Viewing Property</span>
+                </div>
+            </div>
 
-        <div class="mrstay-messages" id="mrstay-message-list">
-            <div class="mrstay-typing" id="mrstay-typing">
-                <span></span><span></span><span></span>
+            <div class="mrstay-header-right">
+                <div class="mrstay-status">
+                    <div class="mrstay-status-dot"></div>
+                    <span>Online</span>
+                </div>
+                <button class="mrstay-clear-btn" id="mrstay-clear-btn" aria-label="Clear Chat">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span class="clear-text">Clear</span>
+                </button>
             </div>
         </div>
 
+        <!-- Messages Area -->
+        <div class="mrstay-messages" id="mrstay-message-list" aria-live="polite">
+            <!-- Welcome state and messages will be injected here -->
+        </div>
+        
+        <!-- Persistent Typing Indicator Container (hidden by default) -->
+        <div class="mrstay-messages" id="mrstay-typing-container" style="display: none; padding: 0 24px 16px 24px; background: transparent; flex: 0 0 auto;">
+            <div class="mrstay-message-wrapper mrstay-message-wrapper--assistant">
+                <div class="mrstay-typing" id="mrstay-typing" style="display: flex;">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Bar -->
         <div class="mrstay-input-bar">
             <input
                 type="text"
                 id="mrstay-input"
-                placeholder="Ask about this property..."
+                placeholder="Ask about properties, pricing, or site visits..."
                 autocomplete="off"
+                aria-label="Chat input"
             >
-            <button id="mrstay-send-btn">➤</button>
+            <button class="mrstay-send-btn" id="mrstay-send-btn" aria-label="Send message">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
         </div>
+
+        <!-- Modals -->
+        <div class="mrstay-modal-overlay" id="mrstay-clear-modal" aria-hidden="true" role="dialog">
+            <div class="mrstay-modal">
+                <h3 class="mrstay-modal-title">Clear conversation?</h3>
+                <p class="mrstay-modal-text">This will remove the current chat history and start a new session.</p>
+                <div class="mrstay-modal-actions">
+                    <button class="mrstay-btn-secondary" id="mrstay-cancel-clear-btn" style="width: auto;">Cancel</button>
+                    <button class="mrstay-btn-primary" id="mrstay-confirm-clear-btn" style="width: auto;">Clear Chat</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
+    <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/session.js"></script>
     <script src="js/api.js"></script>

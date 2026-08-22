@@ -1,8 +1,7 @@
 // ==========================================================
 // MRStay AI — Chat State
-// Persists conversation history in sessionStorage so a page
-// reload doesn't lose the conversation — tied to the same
-// session_id the backend uses for lead-qualification context.
+// Persists conversation history.
+// Minimal safe deduplication added.
 // ==========================================================
 
 const MRStayState = {
@@ -16,6 +15,16 @@ const MRStayState = {
     },
 
     addMessage(role, text) {
+        // Safe deduplication: Prevent double rendering of the EXACT same assistant response within 2 seconds
+        if (role === "assistant" && this.messages.length > 0) {
+            const lastMsg = this.messages[this.messages.length - 1];
+            const now = Date.now();
+            if (lastMsg.role === "assistant" && lastMsg.text === text && (now - lastMsg.timestamp < 2000)) {
+                // Duplicate detected, ignore.
+                return null;
+            }
+        }
+
         const msg = { role, text, timestamp: Date.now() };
         this.messages.push(msg);
         this._persist();
