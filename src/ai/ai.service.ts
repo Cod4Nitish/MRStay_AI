@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 
+// Mirrors ChatResponse in src/backend/models/chat_contract.py
+export interface InternalChatResponse {
+  reply: string;
+  agent_used: string;
+  sources: string[];
+  lead_signal?: { detected: boolean; confidence: number } | null;
+}
+
 @Injectable()
 export class AiService {
   private readonly baseUrl = process.env.AI_SERVICE_URL;
@@ -12,10 +20,12 @@ export class AiService {
     session_id: string;
     message: string;
     context: { history: { role: string; content: string }[] };
-  }) {
-    const res = await axios.post(`${this.baseUrl}/internal/chat`, payload, {
-      headers: { 'X-Internal-Service-Key': this.serviceKey },
-    });
+  }): Promise<InternalChatResponse> {
+    const res = await axios.post<InternalChatResponse>(
+      `${this.baseUrl}/internal/chat`,
+      payload,
+      { headers: { 'X-Internal-Service-Key': this.serviceKey } },
+    );
     return res.data;
   }
 }
