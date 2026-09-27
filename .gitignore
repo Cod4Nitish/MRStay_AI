@@ -65,4 +65,4 @@ venv/
 .pytest_cache/
 
 # Local vector store (CHROMA_DB_PATH)
-data/chroma_db/
+**/data/chroma_db/
