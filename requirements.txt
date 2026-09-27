@@ -2,8 +2,11 @@ fastapi
 uvicorn
 langchain
 langchain-community
+langchain-text-splitters
 chromadb
-google-generativeai
+google-genai
+sentence-transformers
+sqlalchemy
 python-dotenv
 psycopg2-binary
 pytest
